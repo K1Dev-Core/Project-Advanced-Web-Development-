@@ -6,9 +6,8 @@
 
 ```
 backend/
-├── api/index.ts                  จุดเข้า Serverless Function ของ Vercel
 ├── src/
-│   ├── server.ts                 จุดเข้าตอนรันในเครื่อง (http.createServer)
+│   ├── server.ts                 จุดเข้าหลัก: export default app ให้ Vercel และ listen เมื่อรันในเครื่อง
 │   ├── app/                      App (ประกอบ Express) และ Container (Dependency Injection)
 │   ├── config/                   AppConfig อ่านค่าจาก .env
 │   ├── core/                     BaseController, HttpError, ErrorHandler, Pagination, CommonSchemas
@@ -89,8 +88,8 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 1. เตรียมฐานข้อมูล MySQL บน cloud ที่ Vercel ต่อได้ เช่น Aiven (MySQL ฟรี), TiDB Cloud Serverless หรือ Railway
 2. ที่ Vercel ให้ Import repository นี้ แล้วตั้งค่า
    - **Root Directory**: `backend`
-   - **Framework Preset**: `Other`
-   - Build Command / Output Directory ปล่อยว่างไว้ (Vercel จะ build `api/index.ts` เป็น Serverless Function เอง)
+   - **Framework Preset**: `Express` (Vercel ตรวจเจอให้เอง)
+   - Build Command / Output Directory ปล่อยว่างไว้ (Vercel ใช้ `src/server.ts` เป็น Serverless Function เอง)
 3. ใส่ Environment Variables
 
 | ตัวแปร | ตัวอย่าง | หมายเหตุ |
@@ -107,7 +106,7 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 4. กด Deploy แล้วเปิด `https://<project>.vercel.app/api/health` ต้องได้ `"database": "up"`
 5. ถ้าอยากได้ข้อมูลตัวอย่าง ให้ยิง `POST /api/simulations/riders`, `POST /api/simulations/orders` หรือรัน `npm run db:seed` จากเครื่องโดยตั้ง `.env` ให้ชี้ไปที่ฐานข้อมูลจริง
 
-`vercel.json` ส่งทุก path ไปที่ `api/index.ts` จึงเรียกได้ทั้ง `/api/...` และ `/health`
+บน Vercel ทุก endpoint อยู่ใต้ `/api/...`
 
 ## รูปแบบ Response
 

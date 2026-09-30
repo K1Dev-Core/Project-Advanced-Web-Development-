@@ -53,8 +53,8 @@ export class App {
   }
 
   private migrationGate() {
-    return (_req: Request, _res: Response, next: NextFunction) => {
-      if (!this.config.database.autoMigrate) {
+    return (req: Request, _res: Response, next: NextFunction) => {
+      if (!this.config.database.autoMigrate || req.path.endsWith("/health")) {
         next();
         return;
       }
