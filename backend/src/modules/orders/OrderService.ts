@@ -134,11 +134,14 @@ export class OrderService {
       const orders = this.orders.withExecutor(executor);
       const plans = this.plans.withExecutor(executor);
 
-      if (filter.status) {
-        return { deletedOrders: await orders.deleteByFilter(filter), deletedPlans: 0 };
+      const affectedPlans = await plans.findIdsReferencingOrders(filter);
+      await orders.releaseFromPlans(affectedPlans);
+      let deletedPlans = await plans.deleteMany(affectedPlans);
+
+      if (!filter.status && filter.simulated === undefined) {
+        deletedPlans += await plans.deleteByDate(filter.deliveryDate);
       }
 
-      const deletedPlans = await plans.deleteByDate(filter.deliveryDate);
       const deletedOrders = await orders.deleteByFilter(filter);
       return { deletedOrders, deletedPlans };
     });

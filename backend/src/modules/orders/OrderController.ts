@@ -39,7 +39,11 @@ export class OrderController extends BaseController {
         const query = OrderSchemas.nearby.parse(req.query);
         const center = { latitude: query.lat, longitude: query.lng };
         const deliveryDate = query.deliveryDate ?? query.date;
-        const items = await this.service.nearby(center, query.radius, { deliveryDate, status: query.status });
+        const items = await this.service.nearby(center, query.radius, {
+          deliveryDate,
+          status: query.status,
+          simulated: query.simulated,
+        });
         this.ok(res, items, {
           center,
           radiusKm: query.radius,

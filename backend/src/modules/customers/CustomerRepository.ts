@@ -13,6 +13,7 @@ interface CustomerRow {
   latitude: number;
   longitude: number;
   note: string;
+  is_simulated: number;
   created_at: Date;
   updated_at: Date;
   distance_km?: number;
@@ -49,6 +50,10 @@ export class CustomerRepository {
     if (query.lastName) {
       conditions.push("last_name LIKE ?");
       params.push(`%${query.lastName}%`);
+    }
+    if (query.simulated !== undefined) {
+      conditions.push("is_simulated = ?");
+      params.push(query.simulated ? 1 : 0);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -122,7 +127,7 @@ export class CustomerRepository {
       return;
     }
     await this.db.execute(
-      "INSERT INTO customers (first_name, last_name, phone, address, latitude, longitude, note) VALUES ?",
+      "INSERT INTO customers (first_name, last_name, phone, address, latitude, longitude, note, is_simulated) VALUES ?",
       [
         inputs.map((input) => [
           input.firstName,
@@ -132,6 +137,7 @@ export class CustomerRepository {
           input.location.latitude,
           input.location.longitude,
           input.note,
+          input.simulated ? 1 : 0,
         ]),
       ],
     );
@@ -160,6 +166,14 @@ export class CustomerRepository {
     return result.affectedRows > 0;
   }
 
+  async deleteSimulatedWithoutOrders(): Promise<number> {
+    const result = await this.db.execute(
+      `DELETE FROM customers WHERE is_simulated = 1
+       AND NOT EXISTS (SELECT 1 FROM orders WHERE orders.customer_id = customers.id)`,
+    );
+    return result.affectedRows;
+  }
+
   async deleteAll(): Promise<number> {
     const result = await this.db.execute("DELETE FROM customers");
     return result.affectedRows;
@@ -177,6 +191,7 @@ export class CustomerRepository {
       address: row.address,
       location: { latitude: Number(row.latitude), longitude: Number(row.longitude) },
       note: row.note,
+      simulated: RowParser.bool(row.is_simulated),
       createdAt: RowParser.date(row.created_at),
       updatedAt: RowParser.date(row.updated_at),
     };

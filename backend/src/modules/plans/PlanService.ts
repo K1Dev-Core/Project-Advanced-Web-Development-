@@ -7,15 +7,18 @@ import { JobCodeGenerator } from "../../shared/utils/JobCodeGenerator";
 import { Order } from "../orders/Order";
 import { OrderRepository } from "../orders/OrderRepository";
 import { DeliveryPlanner } from "../planning/DeliveryPlanner";
+import { DistanceMatrix } from "../planning/DistanceMatrix";
 import { ObjectiveFactory } from "../planning/objectives/ObjectiveFactory";
 import { PlanningParametersFactory } from "../planning/PlanningParametersFactory";
 import {
   DeliveryRequest,
+  PlanningOptions,
   PlanningParameters,
   PlanObjective,
   PlanProposal,
 } from "../planning/PlanningTypes";
 import { RiderRepository } from "../riders/RiderRepository";
+import { RoutingService } from "../routing/RoutingService";
 import { SettingsService } from "../settings/SettingsService";
 import { DeliveryPlan, DeliveryPlanHeader, PlanListQuery, PlanStatus } from "./DeliveryPlan";
 import { PlanRepository } from "./PlanRepository";
@@ -62,6 +65,7 @@ export class PlanService {
     private readonly riders: RiderRepository,
     private readonly settings: SettingsService,
     private readonly planner: DeliveryPlanner,
+    private readonly routing: RoutingService,
     private readonly jobCodes: JobCodeGenerator,
     private readonly calendar: BusinessCalendar,
     private readonly transactions: TransactionRunner,
@@ -96,7 +100,7 @@ export class PlanService {
   async preview(request: GeneratePlanRequest): Promise<PlanPreview> {
     const context = await this.buildContext(request.deliveryDate, request.orderIds);
     const seed = request.seed ?? SeededRandom.randomSeed();
-    const proposals = this.planner.plan(context.requests, context.parameters, {
+    const proposals = await this.propose(context, {
       objective: request.objective,
       seed,
       alternatives: request.alternatives,
@@ -113,7 +117,7 @@ export class PlanService {
   async create(request: GeneratePlanRequest): Promise<DeliveryPlan> {
     const context = await this.buildContext(request.deliveryDate, request.orderIds);
     const seed = request.seed ?? SeededRandom.randomSeed();
-    const proposals = this.planner.plan(context.requests, context.parameters, {
+    const proposals = await this.propose(context, {
       objective: request.objective,
       seed,
       alternatives: request.alternativeIndex + 1,
@@ -154,7 +158,7 @@ export class PlanService {
     const objective = request.objective ?? plan.objective;
     const seed = request.seed ?? SeededRandom.randomSeed();
 
-    const [proposal] = this.planner.plan(context.requests, context.parameters, {
+    const [proposal] = await this.propose(context, {
       objective,
       seed,
       alternatives: 1,
@@ -269,6 +273,26 @@ export class PlanService {
     }
     await this.plans.assignRider(routeId, riderId);
     return this.get(planId);
+  }
+
+  private async propose(context: PlanningContext, options: PlanningOptions): Promise<PlanProposal[]> {
+    const factor = context.parameters.roadDistanceFactor;
+    const table = await this.routing.table(
+      [context.parameters.depot, ...context.requests.map((request) => request.location)],
+      factor,
+    );
+    const matrix = new DistanceMatrix(table.distancesKm, table.source);
+    const proposals = this.planner.plan(context.requests, context.parameters, options, matrix);
+
+    const routes = proposals.flatMap((proposal) => proposal.routes);
+    const paths = await this.routing.paths(
+      routes.map((route) => route.path),
+      factor,
+    );
+    routes.forEach((route, index) => {
+      route.geometry = paths[index].geometry;
+    });
+    return proposals;
   }
 
   private async buildContext(deliveryDate: string | undefined, orderIds?: number[], allowPartial = false): Promise<PlanningContext> {

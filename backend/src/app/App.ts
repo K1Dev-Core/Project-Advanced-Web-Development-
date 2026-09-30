@@ -36,7 +36,8 @@ export class App {
 
     const api = Router();
     for (const controller of this.container.controllers()) {
-      api.use(controller.basePath, controller.build());
+      const guards = controller.requiresAuth ? [this.container.authGuard.handle] : [];
+      api.use(controller.basePath, ...guards, controller.build());
       this.register(controller.basePath, controller.router);
     }
 

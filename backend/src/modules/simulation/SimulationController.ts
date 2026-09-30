@@ -35,6 +35,21 @@ export class SimulationController extends BaseController {
     );
 
     this.router.delete(
+      "/orders",
+      this.action(async (req, res) => {
+        const { deliveryDate } = SimulationSchemas.clearOrders.parse(req.query);
+        this.ok(res, await this.service.clearOrders(deliveryDate));
+      }),
+    );
+
+    this.router.delete(
+      "/customers",
+      this.action(async (_req, res) => {
+        this.ok(res, await this.service.clearCustomers());
+      }),
+    );
+
+    this.router.delete(
       "/",
       this.action(async (req, res) => {
         const { includeRiders } = SimulationSchemas.reset.parse(req.query);

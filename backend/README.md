@@ -14,10 +14,12 @@ backend/
 │   ├── database/                 Database (pool + transaction), Migrator, migrations, scripts
 │   ├── shared/                   GeoMath, MapLinkBuilder, TimeOfDay, SeededRandom, Money ...
 │   └── modules/
+│       ├── auth/                 ล็อกอินเจ้าของร้านด้วย JWT (AuthService, AuthGuard)
 │       ├── settings/             ตั้งค่าร้าน (ราคา ต้นทุน ค่าไรเดอร์ ความเร็ว เวลาออก)
 │       ├── customers/            จัดการลูกค้า + ค้นหา + ค้นในรัศมี
 │       ├── orders/               จัดการออเดอร์ + แก้จำนวนกล่อง + ล้างทั้งหมด + ค้นในรัศมี
 │       ├── riders/               จัดการรายชื่อไรเดอร์
+│       ├── routing/              ระยะทางถนนจริงและเส้นทางบนแผนที่จาก OSRM (มีระยะประมาณสำรองเมื่อ OSRM ใช้ไม่ได้)
 │       ├── planning/             เอนจินคำนวณเส้นทาง (VRP) แยก Strategy ตามเป้าหมาย
 │       ├── plans/                บันทึก / คำนวณใหม่ / ยืนยัน / ยกเลิก แผนจัดส่ง
 │       ├── jobs/                 ใบงานไรเดอร์ (เปิดด้วยเลขใบงาน)
@@ -43,7 +45,7 @@ backend/
 | `departureTime` | 11:30 | เวลาออกจากร้าน |
 | `deliveryWindowMinutes` | 60 | ต้องถึงมือลูกค้าภายใน 60 นาที (12:30) |
 | `serviceMinutesPerStop` | 2 | เวลาส่งของแต่ละจุด |
-| `roadDistanceFactor` | 1.3 | ตัวคูณแปลงระยะเส้นตรงเป็นระยะถนนโดยประมาณ |
+| `roadDistanceFactor` | 1.3 | ใช้เฉพาะเมื่อ OSRM ใช้ไม่ได้: ระยะประมาณ = ระยะเส้นตรง × ค่านี้ |
 | `serviceRadiusKm` | 3 | รัศมีพื้นที่ให้บริการ (ใช้ตอนจำลองลูกค้า) |
 
 ค่าไรเดอร์ต่อรอบ = `riderBaseFee + riderFeePerKmPerBox × จำนวนกล่องในรอบ × ระยะทางรอบนั้น (กม.)`
@@ -53,11 +55,12 @@ backend/
 
 ปัญหานี้คือ Capacitated Vehicle Routing Problem ที่มีกรอบเวลา เอนจินใน `src/modules/planning` ทำงานแบบนี้
 
-1. `DistanceMatrix` คำนวณระยะ Haversine ระหว่างร้านกับบ้านลูกค้าทุกคู่ แล้วคูณด้วย `roadDistanceFactor`
+1. `RoutingService` ขอระยะทางขับรถจริงบนถนนระหว่างร้านกับบ้านลูกค้าทุกคู่จาก OSRM (Table API) แล้วสร้างเป็น `DistanceMatrix` ถ้า OSRM ล่มหรือช้าเกิน `ROUTING_TIMEOUT_MS` จะใช้ระยะเส้นตรง × `roadDistanceFactor` แทน โดย `summary.distanceSource` บอกว่าแผนนั้นใช้ระยะแบบไหน (`road` หรือ `estimated`)
 2. `RouteEvaluator` หาลำดับส่งที่ดีที่สุดของแต่ละรอบด้วยการลองทุกลำดับ (ไม่เกิน 3 จุดต่อรอบ) และคำนวณ ETA, ค่าไรเดอร์ และจุดที่ส่งช้า
 3. `RouteOptimizer` สร้างคำตอบตั้งต้นด้วย Clarke-Wright Savings แล้วปรับปรุงด้วย Local Search (Relocate, Swap, Merge)
 4. `DeliveryPlanner` รันซ้ำหลายรอบแบบ multi-start ด้วย seed คำตอบจึงทำซ้ำได้ แล้วคืนตัวเลือกที่ดีที่สุดหลายแบบ
-5. `ObjectiveStrategy` มี 4 เป้าหมายให้เลือก: `cost` (ค่าส่งถูกสุด), `distance` (ระยะรวมสั้นสุด), `time` (ถึงมือลูกค้าเร็วสุด), `balanced` (สมดุล) จุดที่ส่งเกิน 12:30 โดนปรับคะแนนหนักมาก ระบบจึงเลี่ยงการส่งช้าก่อนเสมอ
+5. เมื่อได้เส้นทางแล้ว ระบบขอเส้นถนนจริงของแต่ละรอบจาก OSRM (Route API) เก็บไว้ใน `geometry` เพื่อวาดเส้นตามถนนบนแผนที่
+6. `ObjectiveStrategy` มี 4 เป้าหมายให้เลือก: `cost` (ค่าส่งถูกสุด), `distance` (ระยะรวมสั้นสุด), `time` (ถึงมือลูกค้าเร็วสุด), `balanced` (สมดุล) จุดที่ส่งเกิน 12:30 โดนปรับคะแนนหนักมาก ระบบจึงเลี่ยงการส่งช้าก่อนเสมอ
 
 ปุ่ม "คำนวณใหม่" (`POST /api/plans/:id/recalculate`) จะจำเส้นทางที่เคยเสนอไปแล้ว และหาแบบใหม่ที่ไม่ซ้ำเดิมมาให้ทุกครั้ง
 
@@ -83,6 +86,15 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 | `npm run db:migrate` | สร้างหรืออัปเดตตาราง |
 | `npm run db:seed` | สร้างข้อมูลจำลอง |
 
+## การล็อกอิน
+
+แยกผู้ใช้เป็น 2 ฝั่งตามโจทย์
+
+- **เจ้าของร้าน** ล็อกอินด้วย `POST /api/auth/login` (ชื่อผู้ใช้และรหัสผ่านตั้งใน `OWNER_USERNAME` / `OWNER_PASSWORD`) จะได้ `token` กลับมา จากนั้นส่ง header `Authorization: Bearer <token>` ทุกครั้งที่เรียก API ฝั่งจัดการ
+- **ไรเดอร์** ไม่ต้องล็อกอิน ใช้เลขใบงานเปิด `/api/jobs/:code` ได้เลย แต่เห็นแค่ใบงานของตัวเอง
+
+endpoint ที่ไม่ต้องใช้ token: `/api`, `/api/health`, `/api/auth/login`, `/api/jobs/*` ส่วนที่เหลือต้องล็อกอิน ถ้าอยากปิดระบบล็อกอินชั่วคราว (เช่น ตอนให้ TA ทดสอบง่าย ๆ) ให้ตั้ง `AUTH_ENABLED=false`
+
 ## Deploy ขึ้น Vercel
 
 1. เตรียมฐานข้อมูล MySQL บน cloud ที่ Vercel ต่อได้ เช่น Aiven (MySQL ฟรี), TiDB Cloud Serverless หรือ Railway
@@ -102,6 +114,12 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 | `DB_AUTO_MIGRATE` | `true` | สร้างตารางอัตโนมัติเมื่อมี request แรก |
 | `CORS_ORIGINS` | `https://your-frontend.vercel.app` | คั่นหลายค่าด้วย `,` หรือใช้ `*` |
 | `APP_TIMEZONE` | `Asia/Bangkok` | ใช้หา "วันนี้" ของออเดอร์ |
+| `OWNER_USERNAME` | `owner` | ชื่อผู้ใช้เจ้าของร้าน |
+| `OWNER_PASSWORD` | รหัสผ่านที่ตั้งเอง | ต้องตั้ง ไม่งั้นล็อกอินไม่ได้ |
+| `JWT_SECRET` | ข้อความสุ่มยาว ๆ | ใช้เซ็น token |
+| `AUTH_ENABLED` | `true` | `false` = ปิดระบบล็อกอิน |
+| `ROUTING_PROVIDER` | `osrm` | `estimate` = ไม่เรียก OSRM ใช้ระยะประมาณอย่างเดียว |
+| `OSRM_URL` | `https://router.project-osrm.org` | เปลี่ยนเป็น OSRM ของตัวเองได้ |
 
 4. กด Deploy แล้วเปิด `https://<project>.vercel.app/api/health` ต้องได้ `"database": "up"`
 5. ถ้าอยากได้ข้อมูลตัวอย่าง ให้ยิง `POST /api/simulations/riders`, `POST /api/simulations/orders` หรือรัน `npm run db:seed` จากเครื่องโดยตั้ง `.env` ให้ชี้ไปที่ฐานข้อมูลจริง
@@ -118,11 +136,13 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 
 ## รายการ API
 
-### ระบบ
+### ระบบและการล็อกอิน
 | Method | Path | คำอธิบาย |
 | --- | --- | --- |
 | GET | `/api` | ข้อมูล API และรายการ endpoint ทั้งหมด |
 | GET | `/api/health` | ตรวจสถานะเซิร์ฟเวอร์และฐานข้อมูล |
+| POST | `/api/auth/login` | `{ "username": "owner", "password": "..." }` ได้ `token` และเวลาหมดอายุ |
+| GET | `/api/auth/me` | ตรวจว่า token ยังใช้ได้ |
 | GET | `/api/dashboard?date=` | ภาพรวมของวัน: ลูกค้า ไรเดอร์ ออเดอร์ แผนล่าสุด |
 
 ### ตั้งค่าร้าน
@@ -145,7 +165,7 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 ### ออเดอร์
 | Method | Path | คำอธิบาย |
 | --- | --- | --- |
-| GET | `/api/orders?date=&status=&customerId=&search=&page=&limit=` | แสดงออเดอร์พร้อมข้อมูลลูกค้า |
+| GET | `/api/orders?date=&status=&customerId=&simulated=&search=&page=&limit=` | แสดงออเดอร์พร้อมข้อมูลลูกค้า (`simulated=true` = เฉพาะออเดอร์จำลอง) |
 | GET | `/api/orders/summary?date=` หรือ `?all=true` | สรุปจำนวนออเดอร์ กล่อง และยอดขาย แยกตามสถานะ |
 | GET | `/api/orders/nearby?lat=&lng=&radius=2&date=&status=` | ออเดอร์ในรัศมี (ค่าเริ่มต้น 2 กม.) |
 | GET | `/api/orders/:id` | ดูออเดอร์ |
@@ -153,7 +173,7 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 | PUT/PATCH | `/api/orders/:id` | แก้ `boxes`, `customerId`, `deliveryDate`, `note`, `status` (`pending`/`cancelled`/`delivered`) |
 | PATCH | `/api/orders/:id/boxes` | แก้จำนวนกล่อง `{ "boxes": 2 }` หรือเพิ่ม/ลด `{ "change": 1 }`, `{ "change": -1 }` |
 | DELETE | `/api/orders/:id` | ลบออเดอร์ |
-| DELETE | `/api/orders?date=&status=` | ล้างออเดอร์ทั้งหมด (ถ้าไม่ระบุ status จะลบแผนของวันนั้นด้วย) |
+| DELETE | `/api/orders?date=&status=&simulated=` | ลบออเดอร์หลายรายการตามเงื่อนไข แผนที่มีออเดอร์ที่ถูกลบจะถูกลบด้วย และออเดอร์จริงในแผนนั้นจะกลับเป็น `pending` |
 
 สถานะออเดอร์: `pending` → `assigned` (ตอนยืนยันแผน) → `delivered` หรือ `cancelled`
 
@@ -181,9 +201,9 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 | PATCH | `/api/plans/:id/routes/:routeId/rider` | ผูกไรเดอร์กับเส้นทาง `{ "riderId": 3 }` หรือ `null` |
 | DELETE | `/api/plans/:id` | ลบแผน (แผนที่ยืนยันแล้วต้องยกเลิกก่อน) |
 
-ข้อมูลแต่ละเส้นทางมี `color`, `colorName`, `jobCode`, `stops[]` (ลำดับ, ETA, `mapUrl`), `path[]` (พิกัดสำหรับวาดเส้นบนแผนที่), `navigationUrl` (Google Maps นำทางทั้งเส้น), `distanceKm`, `durationMinutes`, `riderFee`, `profit`
+ข้อมูลแต่ละเส้นทางมี `color`, `colorName`, `jobCode`, `stops[]` (ลำดับ, ETA, `mapUrl`), `path[]` (ร้าน → จุดส่งตามลำดับ), `geometry[]` (เส้นตามถนนจริงสำหรับวาดบนแผนที่), `navigationUrl` (Google Maps นำทางทั้งเส้น), `distanceKm`, `durationMinutes`, `riderFee`, `profit`
 
-`summary` ของแผนมี `riderCount`, `totalDistanceKm`, `totalRiderFee`, `revenue`, `foodCost`, `netProfit`, `profitMarginPercent`, `isProfitable`, `latestArrivalTime`, `lateStops`, `onTime`
+`summary` ของแผนมี `distanceSource`, `riderCount`, `totalDistanceKm`, `totalRiderFee`, `revenue`, `foodCost`, `netProfit`, `profitMarginPercent`, `isProfitable`, `latestArrivalTime`, `lateStops`, `onTime`
 
 ### ใบงานไรเดอร์ (หน้าจอมือถือ)
 | Method | Path | คำอธิบาย |
@@ -199,16 +219,26 @@ API จะเปิดที่ `http://localhost:3000/api` ส่วน `npm ru
 | POST | `/api/simulations/customers` | `{ count: 30, radiusKm?: 3, seed? }` สร้างลูกค้ากระจายรอบร้าน |
 | POST | `/api/simulations/orders` | `{ count?, minCount: 20, maxCount: 30, deliveryDate?, clearExisting: false, seed? }` สร้างออเดอร์ 20-30 รายการ รายการละ 1-3 กล่อง (ลูกค้าไม่พอจะสร้างเพิ่มให้) |
 | POST | `/api/simulations/riders` | `{ count: 10 }` สร้างไรเดอร์ |
-| DELETE | `/api/simulations?includeRiders=false` | ล้างข้อมูลทั้งหมด (แผน ออเดอร์ ลูกค้า และไรเดอร์ถ้าระบุ) |
+| DELETE | `/api/simulations/orders?date=` | **ล้างเฉพาะออเดอร์ที่จำลองทั้งหมด** ออเดอร์จริงไม่ถูกลบ |
+| DELETE | `/api/simulations/customers` | ลบออเดอร์จำลองและลูกค้าจำลองที่ไม่มีออเดอร์จริงค้างอยู่ |
+| DELETE | `/api/simulations?includeRiders=false` | รีเซ็ตทั้งระบบ ลบทั้งข้อมูลจริงและจำลอง (แผน ออเดอร์ ลูกค้า และไรเดอร์ถ้าระบุ) |
+
+ออเดอร์และลูกค้าที่สร้างจาก `/api/simulations/*` มี `"simulated": true` ส่วนที่สร้างผ่าน `POST /api/orders` หรือ `POST /api/customers` เป็นข้อมูลจริง (`false`)
 
 ## ตัวอย่างลำดับการใช้งาน
 
 ```bash
 API=http://localhost:3000/api
-curl -X POST $API/simulations/orders -H "Content-Type: application/json" -d '{"clearExisting":true}'
-curl -X POST $API/plans/preview -H "Content-Type: application/json" -d '{"objective":"cost","alternatives":3}'
-curl -X POST $API/plans -H "Content-Type: application/json" -d '{"objective":"cost"}'
-curl -X POST $API/plans/1/recalculate -H "Content-Type: application/json" -d '{}'
-curl -X POST $API/plans/1/confirm
+TOKEN=$(curl -s -X POST $API/auth/login -H "Content-Type: application/json" \
+  -d '{"username":"owner","password":"YOUR_OWNER_PASSWORD"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).data.token')
+AUTH="Authorization: Bearer $TOKEN"
+JSON="Content-Type: application/json"
+
+curl -X POST $API/simulations/orders -H "$AUTH" -H "$JSON" -d '{"clearExisting":true}'
+curl -X POST $API/plans/preview -H "$AUTH" -H "$JSON" -d '{"objective":"cost","alternatives":3}'
+curl -X POST $API/plans -H "$AUTH" -H "$JSON" -d '{"objective":"cost"}'
+curl -X POST $API/plans/1/recalculate -H "$AUTH" -H "$JSON" -d '{}'
+curl -X POST $API/plans/1/confirm -H "$AUTH"
 curl $API/jobs/<jobCode>
+curl -X DELETE $API/simulations/orders -H "$AUTH"
 ```

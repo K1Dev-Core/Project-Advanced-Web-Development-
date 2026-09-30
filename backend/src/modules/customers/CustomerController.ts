@@ -25,6 +25,7 @@ export class CustomerController extends BaseController {
           search: query.search ?? query.q,
           firstName: query.firstName,
           lastName: query.lastName,
+          simulated: query.simulated,
           sort: query.sort,
           order: query.order,
           page: query.page,

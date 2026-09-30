@@ -23,6 +23,7 @@ interface OrderRow {
   unit_price: number;
   status: OrderStatus;
   note: string;
+  is_simulated: number;
   plan_id: number | null;
   delivered_at: Date | null;
   created_at: Date;
@@ -131,8 +132,8 @@ export class OrderRepository {
 
   async create(input: OrderCreateInput): Promise<number> {
     const result = await this.db.execute(
-      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note) VALUES (?, ?, ?, ?, ?)",
-      [input.customerId, input.deliveryDate, input.boxes, input.unitPrice, input.note],
+      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note, is_simulated) VALUES (?, ?, ?, ?, ?, ?)",
+      [input.customerId, input.deliveryDate, input.boxes, input.unitPrice, input.note, input.simulated ? 1 : 0],
     );
     return result.insertId;
   }
@@ -142,8 +143,17 @@ export class OrderRepository {
       return 0;
     }
     const result = await this.db.execute(
-      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note) VALUES ?",
-      [inputs.map((input) => [input.customerId, input.deliveryDate, input.boxes, input.unitPrice, input.note])],
+      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note, is_simulated) VALUES ?",
+      [
+        inputs.map((input) => [
+          input.customerId,
+          input.deliveryDate,
+          input.boxes,
+          input.unitPrice,
+          input.note,
+          input.simulated ? 1 : 0,
+        ]),
+      ],
     );
     return result.affectedRows;
   }
@@ -181,6 +191,17 @@ export class OrderRepository {
     return result.affectedRows;
   }
 
+  async releaseFromPlans(planIds: number[]): Promise<number> {
+    if (planIds.length === 0) {
+      return 0;
+    }
+    const result = await this.db.execute(
+      "UPDATE orders SET status = 'pending', plan_id = NULL WHERE plan_id IN (?) AND status = 'assigned'",
+      [planIds],
+    );
+    return result.affectedRows;
+  }
+
   async releaseFromPlan(planId: number): Promise<number> {
     const result = await this.db.execute(
       "UPDATE orders SET status = 'pending', plan_id = NULL WHERE plan_id = ? AND status = 'assigned'",
@@ -202,16 +223,7 @@ export class OrderRepository {
   }
 
   async deleteByFilter(filter: OrderFilter): Promise<number> {
-    const where: string[] = [];
-    const params: unknown[] = [];
-    if (filter.deliveryDate) {
-      where.push("delivery_date = ?");
-      params.push(filter.deliveryDate);
-    }
-    if (filter.status) {
-      where.push("status = ?");
-      params.push(filter.status);
-    }
+    const { where, params } = OrderRepository.filterSql(filter, "orders");
     const clause = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
     const result = await this.db.execute(`DELETE FROM orders ${clause}`, params);
     return result.affectedRows;
@@ -261,18 +273,26 @@ export class OrderRepository {
     };
   }
 
-  private buildWhere(filter: OrderFilter): { where: string[]; params: unknown[] } {
+  static filterSql(filter: OrderFilter, alias: string): { where: string[]; params: unknown[] } {
     const where: string[] = [];
     const params: unknown[] = [];
     if (filter.deliveryDate) {
-      where.push("o.delivery_date = ?");
+      where.push(`${alias}.delivery_date = ?`);
       params.push(filter.deliveryDate);
     }
     if (filter.status) {
-      where.push("o.status = ?");
+      where.push(`${alias}.status = ?`);
       params.push(filter.status);
     }
+    if (filter.simulated !== undefined) {
+      where.push(`${alias}.is_simulated = ?`);
+      params.push(filter.simulated ? 1 : 0);
+    }
     return { where, params };
+  }
+
+  private buildWhere(filter: OrderFilter): { where: string[]; params: unknown[] } {
+    return OrderRepository.filterSql(filter, "o");
   }
 
   private map(row: OrderRow): Order {
@@ -294,6 +314,7 @@ export class OrderRepository {
       totalPrice: Money.round(boxes * unitPrice),
       status: row.status,
       note: row.note,
+      simulated: RowParser.bool(row.is_simulated),
       planId: row.plan_id === null ? null : Number(row.plan_id),
       deliveredAt: RowParser.date(row.delivered_at),
       createdAt: RowParser.date(row.created_at),

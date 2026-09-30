@@ -22,6 +22,7 @@ export interface Order {
   totalPrice: number;
   status: OrderStatus;
   note: string;
+  simulated: boolean;
   planId: number | null;
   deliveredAt: string | null;
   createdAt: string | null;
@@ -38,6 +39,7 @@ export interface OrderCreateInput {
   boxes: number;
   unitPrice: number;
   note: string;
+  simulated?: boolean;
 }
 
 export interface OrderUpdateInput {
@@ -52,6 +54,7 @@ export interface OrderQuery {
   deliveryDate?: string;
   status?: OrderStatus;
   customerId?: number;
+  simulated?: boolean;
   search?: string;
   page: number;
   limit: number;
@@ -60,6 +63,7 @@ export interface OrderQuery {
 export interface OrderFilter {
   deliveryDate?: string;
   status?: OrderStatus;
+  simulated?: boolean;
 }
 
 export interface OrderSummary {

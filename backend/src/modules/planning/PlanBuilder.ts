@@ -11,6 +11,7 @@ import {
   PlanProposal,
   PlanSummary,
 } from "./PlanningTypes";
+import { DistanceSource } from "../routing/RoutingProvider";
 import { RouteColorPalette } from "./RouteColorPalette";
 import { RouteEvaluation } from "./RouteEvaluation";
 
@@ -18,6 +19,7 @@ export class PlanBuilder {
   constructor(
     private readonly requests: DeliveryRequest[],
     private readonly params: PlanningParameters,
+    private readonly distanceSource: DistanceSource,
   ) {}
 
   build(evaluations: RouteEvaluation[], objective: PlanObjective, seed: number, score: number): PlanProposal {
@@ -28,7 +30,7 @@ export class PlanBuilder {
       seed,
       score: Money.round(score),
       signature: PlanBuilder.signature(routes.map((route) => route.stops.map((stop) => stop.orderId))),
-      summary: PlanBuilder.summarize(routes, this.params),
+      summary: PlanBuilder.summarize(routes, this.params, this.distanceSource),
       routes,
     };
   }
@@ -40,7 +42,7 @@ export class PlanBuilder {
       .join("|");
   }
 
-  static summarize(routes: PlannedRoute[], params: PlanningParameters): PlanSummary {
+  static summarize(routes: PlannedRoute[], params: PlanningParameters, distanceSource: DistanceSource): PlanSummary {
     const stops = routes.flatMap((route) => route.stops);
     const boxCount = routes.reduce((sum, route) => sum + route.boxCount, 0);
     const revenue = Money.round(boxCount * params.boxPrice);
@@ -55,6 +57,7 @@ export class PlanBuilder {
     const departure = TimeOfDay.parse(params.departureTime);
 
     return {
+      distanceSource,
       riderCount: routes.length,
       orderCount: stops.length,
       boxCount,
@@ -123,6 +126,7 @@ export class PlanBuilder {
       lateStops: evaluation.lateStops,
       stops,
       path: [this.params.depot, ...locations],
+      geometry: [this.params.depot, ...locations],
       navigationUrl: MapLinkBuilder.route(this.params.depot, locations),
     };
   }
