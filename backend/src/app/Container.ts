@@ -2,6 +2,9 @@ import { AppConfig } from "../config/AppConfig";
 import { BaseController } from "../core/http/BaseController";
 import { Database } from "../database/Database";
 import { Migrator } from "../database/Migrator";
+import { AuthController } from "../modules/auth/AuthController";
+import { AuthGuard } from "../modules/auth/AuthGuard";
+import { AuthService } from "../modules/auth/AuthService";
 import { CustomerController } from "../modules/customers/CustomerController";
 import { CustomerRepository } from "../modules/customers/CustomerRepository";
 import { CustomerService } from "../modules/customers/CustomerService";
@@ -17,6 +20,8 @@ import { PlanController } from "../modules/plans/PlanController";
 import { PlanRepository } from "../modules/plans/PlanRepository";
 import { PlanService } from "../modules/plans/PlanService";
 import { RiderController } from "../modules/riders/RiderController";
+import { OsrmRoutingProvider } from "../modules/routing/OsrmRoutingProvider";
+import { RoutingService } from "../modules/routing/RoutingService";
 import { RiderRepository } from "../modules/riders/RiderRepository";
 import { RiderService } from "../modules/riders/RiderService";
 import { SettingsController } from "../modules/settings/SettingsController";
@@ -31,6 +36,8 @@ export class Container {
   readonly database: Database;
   readonly migrator: Migrator;
   readonly calendar: BusinessCalendar;
+  readonly authService: AuthService;
+  readonly authGuard: AuthGuard;
 
   readonly settingsService: SettingsService;
   readonly customerService: CustomerService;
@@ -45,6 +52,8 @@ export class Container {
     this.database = Database.connect(config.database);
     this.migrator = new Migrator(this.database);
     this.calendar = new BusinessCalendar(config.server.timezone);
+    this.authService = new AuthService(config.auth);
+    this.authGuard = new AuthGuard(this.authService);
 
     const settingsRepository = new SettingsRepository(this.database);
     const customerRepository = new CustomerRepository(this.database);
@@ -69,6 +78,7 @@ export class Container {
       riderRepository,
       this.settingsService,
       new DeliveryPlanner(),
+      this.createRoutingService(),
       new JobCodeGenerator(),
       this.calendar,
       this.database,
@@ -94,8 +104,18 @@ export class Container {
     );
   }
 
+  private createRoutingService(): RoutingService {
+    const routing = this.config.routing;
+    const provider =
+      routing.provider === "osrm"
+        ? new OsrmRoutingProvider(routing.osrmUrl, routing.osrmProfile, routing.timeoutMs)
+        : null;
+    return new RoutingService(provider, routing.concurrency);
+  }
+
   controllers(): BaseController[] {
     return [
+      new AuthController(this.authService, this.authGuard),
       new DashboardController(this.dashboardService),
       new SettingsController(this.settingsService),
       new CustomerController(this.customerService, this.orderService),

@@ -9,6 +9,7 @@ export interface Customer {
   address: string;
   location: GeoPoint;
   note: string;
+  simulated: boolean;
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -24,6 +25,7 @@ export interface CustomerInput {
   address: string;
   location: GeoPoint;
   note: string;
+  simulated?: boolean;
 }
 
 export type CustomerSortField = "id" | "name" | "createdAt";
@@ -32,6 +34,7 @@ export interface CustomerQuery {
   search?: string;
   firstName?: string;
   lastName?: string;
+  simulated?: boolean;
   sort: CustomerSortField;
   order: "asc" | "desc";
   page: number;

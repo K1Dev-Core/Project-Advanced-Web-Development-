@@ -1,8 +1,11 @@
 import { Page, Pagination } from "../../core/http/Pagination";
 import { SqlExecutor } from "../../database/SqlExecutor";
+import { GeoPoint } from "../../shared/geo/GeoPoint";
 import { MapLinkBuilder } from "../../shared/geo/MapLinkBuilder";
 import { TimeOfDay } from "../../shared/time/TimeOfDay";
 import { RowParser } from "../../shared/utils/RowParser";
+import { OrderFilter } from "../orders/Order";
+import { OrderRepository } from "../orders/OrderRepository";
 import { PlannedRoute, PlanningParameters, PlanObjective, PlanSummary } from "../planning/PlanningTypes";
 import { RouteColorPalette } from "../planning/RouteColorPalette";
 import {
@@ -55,6 +58,7 @@ interface RouteRow {
   food_cost: number;
   profit: number;
   path: string;
+  geometry: string | null;
   started_at: Date | null;
   completed_at: Date | null;
   rider_name: string | null;
@@ -144,8 +148,8 @@ export class PlanRepository {
     for (const [index, route] of routes.entries()) {
       const result = await this.db.execute(
         `INSERT INTO plan_routes
-          (plan_id, sequence, job_code, color, order_count, box_count, distance_km, duration_minutes, rider_fee, revenue, food_cost, profit, path)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (plan_id, sequence, job_code, color, order_count, box_count, distance_km, duration_minutes, rider_fee, revenue, food_cost, profit, path, geometry)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           planId,
           route.sequence,
@@ -160,6 +164,7 @@ export class PlanRepository {
           route.foodCost,
           route.profit,
           JSON.stringify(route.path),
+          JSON.stringify(route.geometry),
         ],
       );
       if (route.stops.length === 0) {
@@ -315,6 +320,26 @@ export class PlanRepository {
     return result.affectedRows > 0;
   }
 
+  async findIdsReferencingOrders(filter: OrderFilter): Promise<number[]> {
+    const { where, params } = OrderRepository.filterSql(filter, "o");
+    const clause = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+    const rows = await this.db.query<{ plan_id: number }>(
+      `SELECT DISTINCT pr.plan_id FROM plan_routes pr
+       INNER JOIN plan_stops ps ON ps.route_id = pr.id
+       INNER JOIN orders o ON o.id = ps.order_id ${clause}`,
+      params,
+    );
+    return rows.map((row) => Number(row.plan_id));
+  }
+
+  async deleteMany(ids: number[]): Promise<number> {
+    if (ids.length === 0) {
+      return 0;
+    }
+    const result = await this.db.execute("DELETE FROM delivery_plans WHERE id IN (?)", [ids]);
+    return result.affectedRows;
+  }
+
   async deleteByDate(deliveryDate?: string): Promise<number> {
     const result = deliveryDate
       ? await this.db.execute("DELETE FROM delivery_plans WHERE delivery_date = ?", [deliveryDate])
@@ -375,6 +400,7 @@ export class PlanRepository {
     const sequence = Number(row.sequence);
     const durationMinutes = Number(row.duration_minutes);
     const stops = stopRows.map((stop) => this.mapStop(stop));
+    const path = RowParser.json<GeoPoint[]>(row.path, []);
     return {
       id: Number(row.id),
       planId: Number(row.plan_id),
@@ -403,7 +429,8 @@ export class PlanRepository {
       profit: Number(row.profit),
       lateStops: stops.filter((stop) => stop.late).length,
       stops,
-      path: RowParser.json(row.path, []),
+      path,
+      geometry: RowParser.json<GeoPoint[]>(row.geometry, path),
       navigationUrl: MapLinkBuilder.route(
         params.depot,
         stops.map((stop) => stop.location),

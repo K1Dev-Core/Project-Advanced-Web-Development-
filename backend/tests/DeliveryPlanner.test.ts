@@ -88,7 +88,7 @@ describe("DeliveryPlanner", () => {
     for (const seed of [1, 2, 3, 4]) {
       const requests = randomRequests(7, seed);
       const evaluator = new RouteEvaluator(
-        new DistanceMatrix(depot, requests.map((request) => request.location), params.roadDistanceFactor),
+        DistanceMatrix.estimated(depot, requests.map((request) => request.location), params.roadDistanceFactor),
         requests.map((request) => request.boxes),
         params,
         ObjectiveFactory.create("cost"),

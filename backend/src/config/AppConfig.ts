@@ -16,6 +16,22 @@ export interface DatabaseConfig {
   autoMigrate: boolean;
 }
 
+export interface RoutingConfig {
+  provider: "osrm" | "estimate";
+  osrmUrl: string;
+  osrmProfile: string;
+  timeoutMs: number;
+  concurrency: number;
+}
+
+export interface AuthConfig {
+  enabled: boolean;
+  ownerUsername: string;
+  ownerPassword?: string;
+  jwtSecret?: string;
+  tokenTtlHours: number;
+}
+
 export interface ServerConfig {
   port: number;
   timezone: string;
@@ -28,6 +44,8 @@ export class AppConfig {
 
   readonly server: ServerConfig;
   readonly database: DatabaseConfig;
+  readonly routing: RoutingConfig;
+  readonly auth: AuthConfig;
 
   private constructor(env: NodeJS.ProcessEnv) {
     this.server = {
@@ -48,6 +66,20 @@ export class AppConfig {
       sslCa: env.DB_SSL_CA ? env.DB_SSL_CA.replace(/\\n/g, "\n") : undefined,
       connectionLimit: AppConfig.toNumber(env.DB_CONNECTION_LIMIT, 5),
       autoMigrate: AppConfig.toBoolean(env.DB_AUTO_MIGRATE, true),
+    };
+    this.routing = {
+      provider: env.ROUTING_PROVIDER === "estimate" ? "estimate" : "osrm",
+      osrmUrl: (env.OSRM_URL || "https://router.project-osrm.org").replace(/\/+$/, ""),
+      osrmProfile: env.OSRM_PROFILE || "driving",
+      timeoutMs: AppConfig.toNumber(env.ROUTING_TIMEOUT_MS, 8000),
+      concurrency: AppConfig.toNumber(env.ROUTING_CONCURRENCY, 4),
+    };
+    this.auth = {
+      enabled: AppConfig.toBoolean(env.AUTH_ENABLED, true),
+      ownerUsername: env.OWNER_USERNAME || "owner",
+      ownerPassword: env.OWNER_PASSWORD || undefined,
+      jwtSecret: env.JWT_SECRET || undefined,
+      tokenTtlHours: AppConfig.toNumber(env.JWT_TTL_HOURS, 12),
     };
   }
 

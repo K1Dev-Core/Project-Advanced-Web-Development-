@@ -5,6 +5,7 @@ import { JobService } from "./JobService";
 
 export class JobController extends BaseController {
   readonly basePath = "/jobs";
+  readonly requiresAuth = false;
 
   constructor(private readonly service: JobService) {
     super();

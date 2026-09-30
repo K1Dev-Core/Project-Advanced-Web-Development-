@@ -12,6 +12,8 @@ export abstract class BaseController {
 
   abstract readonly basePath: string;
 
+  readonly requiresAuth: boolean = true;
+
   protected abstract registerRoutes(): void;
 
   build(): Router {

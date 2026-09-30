@@ -32,6 +32,13 @@ export class SimulationSchemas {
     seed: seed.optional(),
   });
 
+  static readonly clearOrders = z
+    .object({
+      date: CommonSchemas.date.optional(),
+      deliveryDate: CommonSchemas.date.optional(),
+    })
+    .transform(({ date, deliveryDate }) => ({ deliveryDate: deliveryDate ?? date }));
+
   static readonly reset = z.object({
     includeRiders: CommonSchemas.booleanFlag.default(false),
   });

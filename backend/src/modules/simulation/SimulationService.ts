@@ -57,7 +57,8 @@ export class SimulationService {
       return {
         ...profile,
         location: GeoMath.offset(settings.shopLocation, distance, bearing),
-        note: "simulated",
+        note: "",
+        simulated: true,
       };
     });
 
@@ -72,7 +73,7 @@ export class SimulationService {
     const deliveryDate = this.calendar.resolve(request.deliveryDate);
     const count = request.count ?? random.int(request.minCount, request.maxCount);
 
-    const cleared = request.clearExisting ? await this.orderService.clear({ deliveryDate }) : null;
+    const cleared = request.clearExisting ? await this.orderService.clear({ deliveryDate, simulated: true }) : null;
 
     let customersCreated = 0;
     let customers = await this.customers.findAll();
@@ -98,7 +99,8 @@ export class SimulationService {
         deliveryDate,
         boxes: random.int(1, settings.maxBoxesPerOrder),
         unitPrice: settings.boxPrice,
-        note: "simulated",
+        note: "",
+        simulated: true,
       };
     });
 
@@ -127,6 +129,16 @@ export class SimulationService {
       });
     }
     return { seed, created: count };
+  }
+
+  clearOrders(deliveryDate?: string) {
+    return this.orderService.clear({ deliveryDate, simulated: true });
+  }
+
+  async clearCustomers() {
+    const orders = await this.orderService.clear({ simulated: true });
+    const deletedCustomers = await this.customers.deleteSimulatedWithoutOrders();
+    return { ...orders, deletedCustomers };
   }
 
   async reset(includeRiders: boolean) {

@@ -1,13 +1,24 @@
 import { GeoMath, GeoPoint } from "../../shared/geo/GeoPoint";
+import { DistanceSource } from "../routing/RoutingProvider";
 
 export class DistanceMatrix {
   static readonly DEPOT = 0;
 
-  private readonly values: number[][];
+  constructor(
+    private readonly values: number[][],
+    readonly source: DistanceSource,
+  ) {}
 
-  constructor(depot: GeoPoint, locations: GeoPoint[], roadFactor: number) {
+  static estimated(depot: GeoPoint, locations: GeoPoint[], roadFactor: number): DistanceMatrix {
     const points = [depot, ...locations];
-    this.values = points.map((from) => points.map((to) => GeoMath.haversineKm(from, to) * roadFactor));
+    return new DistanceMatrix(
+      points.map((from) => points.map((to) => GeoMath.haversineKm(from, to) * roadFactor)),
+      "estimated",
+    );
+  }
+
+  get size(): number {
+    return this.values.length;
   }
 
   between(from: number, to: number): number {

@@ -51,6 +51,7 @@ export class CustomerSchemas {
     q: z.string().trim().min(1).optional(),
     firstName: z.string().trim().min(1).optional(),
     lastName: z.string().trim().min(1).optional(),
+    simulated: CommonSchemas.booleanFlag.optional(),
     sort: z.enum(["id", "name", "createdAt"]).default("id"),
     order: z.enum(["asc", "desc"]).default("asc"),
   });

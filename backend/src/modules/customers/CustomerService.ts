@@ -41,6 +41,7 @@ export class CustomerService {
       address: changes.address ?? current.address,
       location: changes.location ?? current.location,
       note: changes.note ?? current.note,
+      simulated: current.simulated,
     };
     await this.customers.update(id, merged);
     return this.get(id);

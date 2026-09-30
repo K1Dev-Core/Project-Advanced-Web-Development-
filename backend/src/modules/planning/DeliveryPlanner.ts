@@ -17,17 +17,27 @@ export class DeliveryPlanner {
   private static readonly MAX_RESTARTS = 80;
   private static readonly WORK_BUDGET = 2400;
 
-  plan(requests: DeliveryRequest[], params: PlanningParameters, options: PlanningOptions): PlanProposal[] {
+  plan(
+    requests: DeliveryRequest[],
+    params: PlanningParameters,
+    options: PlanningOptions,
+    distances?: DistanceMatrix,
+  ): PlanProposal[] {
     if (requests.length === 0) {
       return [];
     }
 
     const objective = ObjectiveFactory.create(options.objective);
-    const matrix = new DistanceMatrix(
-      params.depot,
-      requests.map((request) => request.location),
-      params.roadDistanceFactor,
-    );
+    const matrix =
+      distances ??
+      DistanceMatrix.estimated(
+        params.depot,
+        requests.map((request) => request.location),
+        params.roadDistanceFactor,
+      );
+    if (matrix.size !== requests.length + 1) {
+      throw new Error("Distance matrix size does not match the delivery requests");
+    }
     const evaluator = new RouteEvaluator(
       matrix,
       requests.map((request) => request.boxes),
@@ -56,7 +66,7 @@ export class DeliveryPlanner {
     const fresh = ranked.filter((candidate) => !excluded.has(candidate.signature));
     const chosen = (fresh.length > 0 ? fresh : ranked).slice(0, Math.max(1, options.alternatives));
 
-    const builder = new PlanBuilder(requests, params);
+    const builder = new PlanBuilder(requests, params, matrix.source);
     return chosen.map((candidate) =>
       builder.build(
         candidate.routes.map((route) => evaluator.best(route)),

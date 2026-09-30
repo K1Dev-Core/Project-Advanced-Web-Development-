@@ -30,6 +30,7 @@ export class OrderSchemas {
     deliveryDate: CommonSchemas.date.optional(),
     status: status.optional(),
     customerId: CommonSchemas.positiveId.optional(),
+    simulated: CommonSchemas.booleanFlag.optional(),
     search: z.string().trim().min(1).optional(),
   }).transform(({ date, deliveryDate, ...rest }) => ({ ...rest, deliveryDate: deliveryDate ?? date }));
 
@@ -38,8 +39,13 @@ export class OrderSchemas {
       date: CommonSchemas.date.optional(),
       deliveryDate: CommonSchemas.date.optional(),
       status: status.optional(),
+      simulated: CommonSchemas.booleanFlag.optional(),
     })
-    .transform(({ date, deliveryDate, status: value }) => ({ deliveryDate: deliveryDate ?? date, status: value }));
+    .transform(({ date, deliveryDate, status: value, simulated }) => ({
+      deliveryDate: deliveryDate ?? date,
+      status: value,
+      simulated,
+    }));
 
   static readonly summary = z
     .object({
@@ -53,5 +59,6 @@ export class OrderSchemas {
     date: CommonSchemas.date.optional(),
     deliveryDate: CommonSchemas.date.optional(),
     status: status.optional(),
+    simulated: CommonSchemas.booleanFlag.optional(),
   });
 }

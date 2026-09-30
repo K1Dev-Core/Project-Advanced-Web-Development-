@@ -140,4 +140,16 @@ export const migrations: Migration[] = [
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
     ],
   },
+  {
+    version: 2,
+    name: "add_route_geometry_and_simulation_flags",
+    statements: [
+      "ALTER TABLE plan_routes ADD COLUMN geometry LONGTEXT NULL AFTER path",
+      "ALTER TABLE orders ADD COLUMN is_simulated TINYINT(1) NOT NULL DEFAULT 0 AFTER note",
+      "ALTER TABLE customers ADD COLUMN is_simulated TINYINT(1) NOT NULL DEFAULT 0 AFTER note",
+      "UPDATE orders SET is_simulated = 1, note = '' WHERE note = 'simulated'",
+      "UPDATE customers SET is_simulated = 1, note = '' WHERE note = 'simulated'",
+      "CREATE INDEX idx_orders_simulated ON orders (is_simulated)",
+    ],
+  },
 ];

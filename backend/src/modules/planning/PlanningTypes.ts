@@ -1,4 +1,5 @@
 import { GeoPoint } from "../../shared/geo/GeoPoint";
+import { DistanceSource } from "../routing/RoutingProvider";
 
 export const PLAN_OBJECTIVES = ["cost", "distance", "time", "balanced"] as const;
 
@@ -68,10 +69,12 @@ export interface PlannedRoute {
   lateStops: number;
   stops: PlannedStop[];
   path: GeoPoint[];
+  geometry: GeoPoint[];
   navigationUrl: string;
 }
 
 export interface PlanSummary {
+  distanceSource: DistanceSource;
   riderCount: number;
   orderCount: number;
   boxCount: number;

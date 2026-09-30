@@ -3,6 +3,7 @@ import { Database } from "../../database/Database";
 
 export class SystemController extends BaseController {
   readonly basePath = "/";
+  readonly requiresAuth = false;
 
   constructor(
     private readonly database: Database,
