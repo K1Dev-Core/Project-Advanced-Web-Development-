@@ -155,19 +155,21 @@ test('real navigation has icons, no test menu, and stays fully visible on small 
   ).toBeTruthy();
 });
 
-test('halftone background stays subtle and adapts to the system appearance', async ({ page }) => {
+test('halftone background stays subtle and light regardless of system appearance', async ({
+  page,
+}) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/customer');
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage))
     .toContain('radial-gradient');
-  expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).toBe(
-    'rgb(242, 242, 247)',
-  );
+  expect(
+    await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor),
+  ).toBe('rgb(242, 242, 247)');
   await page.emulateMedia({ colorScheme: 'dark' });
-  expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).toBe(
-    'rgb(25, 25, 30)',
-  );
+  expect(
+    await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor),
+  ).toBe('rgb(242, 242, 247)');
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body, '::after').backgroundImage))
     .toContain('radial-gradient');
