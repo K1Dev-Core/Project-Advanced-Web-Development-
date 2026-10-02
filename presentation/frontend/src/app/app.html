@@ -1,0 +1,37 @@
+<a class="skip" href="#content">ข้ามไปเนื้อหา</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" routerLink="/customer"
+      ><img class="brand-logo" src="/brand/khaokong-logo.png" alt="" width="76" height="57" /><span
+        >ข้าวกล่อง<small>ส่งด่วนมื้อเที่ยง</small></span
+      ></a
+    >
+    @if (api.token()) {
+      <button class="text logout" (click)="api.logout()">
+        <ui-icon name="logout" /><span>ออกจากระบบ</span>
+      </button>
+    }
+  </div>
+  <nav aria-label="เมนูหลัก" [class.public-nav]="!api.token()">
+    @for (item of api.token() ? ownerNav : publicNav; track item[0]) {
+      <a
+        [routerLink]="item[0]"
+        routerLinkActive="selected"
+        [routerLinkActiveOptions]="{ exact: item[0] === '/admin' || item[0] === '/customer' }"
+        ariaCurrentWhenActive="page"
+        ><ui-icon [name]="item[2]" /><span>{{ item[1] }}</span></a
+      >
+    }
+  </nav>
+</header>
+<main id="content" tabindex="-1"><router-outlet /></main>
+
+@if (!isDevPreview) {
+  @defer (on idle) {
+    <dev-tools />
+  }
+}
+
+@if (api.notice()) {
+  <app-notice [message]="api.notice()" (dismiss)="api.notice.set('')" />
+}

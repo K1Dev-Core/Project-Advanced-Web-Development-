@@ -1,0 +1,8 @@
+node_modules
+.angular
+dist
+test-results*
+playwright-report
+review
+simple-e2e
+scripts
