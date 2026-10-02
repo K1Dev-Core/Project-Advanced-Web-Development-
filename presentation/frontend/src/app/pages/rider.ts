@@ -1,0 +1,70 @@
+import { Icon } from '../../shared/icon';
+import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Api } from '../../core/api';
+import { Job } from '../../core/models';
+import { ParcelMap } from '../../shared/map';
+import { PageTitle, RequestState, DeliveryStatus } from '../shared/ui';
+import { Task } from '../shared/task';
+@Component({
+  imports: [Icon, FormsModule, PageTitle, RequestState, DeliveryStatus, ParcelMap],
+  templateUrl: './rider.html',
+})
+export class RiderPage {
+  api = inject(Api);
+  router = inject(Router);
+  task = new Task();
+  code = '';
+  job = signal<Job | null>(null);
+  constructor() {
+    inject(ActivatedRoute)
+      .paramMap.pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        const code = params.get('code');
+        if (code) {
+          this.code = code;
+          this.load();
+        }
+      });
+  }
+  open() {
+    const code = this.code.trim().toUpperCase();
+    if (!code) return;
+    return this.router.url.endsWith('/' + code)
+      ? this.load()
+      : this.router.navigate(['/rider/jobs', code]);
+  }
+  load() {
+    return this.task.run(async () => {
+      this.job.set(null);
+      this.job.set(
+        (
+          await this.api.request<Job>(
+            '/jobs/' + encodeURIComponent(this.code.trim()),
+            'GET',
+            undefined,
+            false,
+          )
+        ).data,
+      );
+    });
+  }
+  action(action: string) {
+    return this.task.run(async () => {
+      const job = this.job();
+      if (!job) return;
+      this.job.set(
+        (
+          await this.api.request<Job>(
+            `/jobs/${encodeURIComponent(job.jobCode)}/${action}`,
+            'POST',
+            {},
+            false,
+          )
+        ).data,
+      );
+    }, 'อัปเดตใบงานแล้ว');
+  }
+}
