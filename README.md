@@ -57,3 +57,5 @@ npm run test:live --prefix frontend
 ## Frontend เวอร์ชันหลัก: แบบเรียบง่าย
 
 โค้ดอยู่ใน `frontend/src/app/` แยก pages, components, services และ models ตามบทเรียน Angular ดู [คู่มือ frontend](frontend/README.md) และ [โครงสร้างและวิธีอธิบายโค้ด](SIMPLE-FRONTEND.md)
+
+ชุดโค้ดแบบย่อสำหรับนำไปอธิบายหรือ deploy แยกไว้ที่ [`main/v1/`](main/v1/) ภายในมี `frontend/`, `backend/` และคู่มือการรัน
