@@ -1,12 +1,13 @@
 import { DateControl } from '../shared/date-control';
-import { Icon } from '../../shared/icon';
+import { Icon } from '../components/icon';
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
-import { Api } from '../../core/api';
-import { Dashboard, today } from '../../core/models';
-import { PageTitle, RequestState } from '../shared/ui';
+import { Api } from '../services/api';
+import { Dashboard, today } from '../models/models';
+import { PageTitle } from '../components/page-title';
+import { RequestState } from '../components/request-state';
 import { Task } from '../shared/task';
 @Component({
   imports: [DateControl, Icon, FormsModule, RouterLink, DecimalPipe, PageTitle, RequestState],

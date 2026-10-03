@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "simple": {
+    "app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:class": {
@@ -35,14 +35,14 @@
         }
       },
       "root": "",
-      "sourceRoot": "src/simple",
+      "sourceRoot": "src/app",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "browser": "src/simple/main.ts",
-            "tsConfig": "tsconfig.simple.json",
+            "browser": "src/app/main.ts",
+            "tsConfig": "tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
@@ -50,8 +50,8 @@
               }
             ],
             "styles": [
-              "src/simple/styles.css",
-              "src/simple/material.scss"
+              "src/app/styles.css",
+              "src/app/material.scss"
             ],
             "outputPath": "dist/frontend",
             "index": "src/index.html"
@@ -84,10 +84,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "simple:build:production"
+              "buildTarget": "app:build:production"
             },
             "development": {
-              "buildTarget": "simple:build:development"
+              "buildTarget": "app:build:development"
             }
           },
           "defaultConfiguration": "development"

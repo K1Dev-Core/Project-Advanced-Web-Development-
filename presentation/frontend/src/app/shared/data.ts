@@ -1,4 +1,4 @@
-import { Api } from '../../core/api';
+import { Api } from '../services/api';
 // Select controls must include every record, not just the first list page.
 export async function allRecords<T>(api: Api, path: string): Promise<T[]> {
   const rows: T[] = [];

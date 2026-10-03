@@ -4,7 +4,7 @@ Frontend เดียวของโปรเจกต์ ภาษาไทย�
 
 ## รัน
 
-ใช้ frontend เพียงเวอร์ชันเดียวใน `src/simple/` เชื่อม backend ของโปรเจกต์ หากต้องการฐานข้อมูลทดสอบแยก ใช้ `npm run start:local` จาก root โปรเจกต์ เปิดเว็บที่พอร์ต 4201 ดู [คู่มือหลัก](../README.md)
+ใช้ frontend เพียงเวอร์ชันเดียวใน `src/app/` เชื่อม backend ของโปรเจกต์ หากต้องการฐานข้อมูลทดสอบแยก ใช้ `npm run start:local` จาก root โปรเจกต์ เปิดเว็บที่พอร์ต 4201 ดู [คู่มือหลัก](../README.md)
 
 เปิดเว็บหลัก:
 
@@ -69,4 +69,4 @@ Vercel: Root Directory `frontend`, Build `npm run build`, Output `dist/frontend/
 
 ## ตรวจแนวจัดวางทุกหน้า
 
-ระบบ spacing, alignment, form controls และ responsive layout ใช้ `src/simple/styles.css` ร่วมกัน ตรวจภาพจริง 80 มุมมองและมี layout regression tests ดู [รายงาน UX/UI](review/LAYOUT-REVIEW.md)
+ระบบ spacing, alignment, form controls และ responsive layout ใช้ `src/app/styles.css` ร่วมกัน ตรวจภาพจริง 80 มุมมองและมี layout regression tests ดู [รายงาน UX/UI](review/LAYOUT-REVIEW.md)

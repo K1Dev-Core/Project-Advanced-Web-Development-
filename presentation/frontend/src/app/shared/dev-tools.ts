@@ -1,11 +1,11 @@
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Api } from '../../core/api';
-import { today } from '../../core/models';
-import { Icon } from '../../shared/icon';
+import { Api } from '../services/api';
+import { today } from '../models/models';
+import { Icon } from '../components/icon';
 import { DateControl } from './date-control';
-import { RequestState } from './ui';
+import { RequestState } from '../components/request-state';
 
 type Kind = 'bundle' | 'customers' | 'orders' | 'riders';
 interface Created {

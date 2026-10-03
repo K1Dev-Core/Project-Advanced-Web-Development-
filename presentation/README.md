@@ -9,8 +9,9 @@
 - `backend/src/modules/` แบ่งงานตามฟีเจอร์ เช่น ลูกค้า ออเดอร์ ไรเดอร์ เส้นทาง แผน และใบงาน
 - `backend/src/database/` เชื่อม MySQL และจัดการ migrations
 - `frontend/src/app/` มีหน้าเว็บและคอมโพเนนต์ที่ใช้ร่วมกัน
-- `frontend/src/core/` มี API client และแบบข้อมูล
-- `frontend/src/shared/` มีไอคอนและแผนที่ Leaflet
+- `frontend/src/app/services/` มี API client
+- `frontend/src/app/models/` มีแบบข้อมูล
+- `frontend/src/app/components/` มีไอคอน สถานะ และแผนที่ Leaflet
 
 ## วิธีทำงานของระบบ
 

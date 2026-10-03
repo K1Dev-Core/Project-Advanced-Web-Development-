@@ -3,13 +3,13 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve simple --host 127.0.0.1 --port 4200 --proxy-config proxy.conf.json",
-    "build": "ng build simple",
+    "start": "ng serve app --host 127.0.0.1 --port 4200 --proxy-config proxy.conf.json",
+    "build": "ng build app",
     "test": "playwright test --config playwright.simple.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.simple.json",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test:ui": "playwright test --config playwright.simple.config.ts --ui",
     "test:live": "playwright test --config playwright.simple.live.config.ts",
-    "start:local": "ng serve simple --host 127.0.0.1 --port 4201 --proxy-config proxy.local.conf.json"
+    "start:local": "ng serve app --host 127.0.0.1 --port 4201 --proxy-config proxy.local.conf.json"
   },
   "private": true,
   "packageManager": "npm@10.9.8",

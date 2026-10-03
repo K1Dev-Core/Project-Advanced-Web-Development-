@@ -1,12 +1,14 @@
-import { Icon } from '../../shared/icon';
+import { Icon } from '../components/icon';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Api } from '../../core/api';
-import { Job } from '../../core/models';
-import { ParcelMap } from '../../shared/map';
-import { PageTitle, RequestState, DeliveryStatus } from '../shared/ui';
+import { Api } from '../services/api';
+import { Job } from '../models/models';
+import { ParcelMap } from '../components/parcel-map';
+import { PageTitle } from '../components/page-title';
+import { RequestState } from '../components/request-state';
+import { DeliveryStatus } from '../components/delivery-status';
 import { Task } from '../shared/task';
 @Component({
   imports: [Icon, FormsModule, PageTitle, RequestState, DeliveryStatus, ParcelMap],

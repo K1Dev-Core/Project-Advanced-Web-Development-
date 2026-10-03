@@ -56,4 +56,4 @@ npm run test:live --prefix frontend
 
 ## Frontend เวอร์ชันหลัก: แบบเรียบง่าย
 
-โค้ดอยู่ใน `frontend/src/simple/` ใช้ API และแผนที่ส่วนกลางของโปรเจกต์ ดู [คู่มือ frontend](frontend/README.md) และ [โครงสร้างและวิธีอธิบายโค้ด](SIMPLE-FRONTEND.md)
+โค้ดอยู่ใน `frontend/src/app/` แยก pages, components, services และ models ตามบทเรียน Angular ดู [คู่มือ frontend](frontend/README.md) และ [โครงสร้างและวิธีอธิบายโค้ด](SIMPLE-FRONTEND.md)

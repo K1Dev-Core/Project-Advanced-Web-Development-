@@ -1,4 +1,4 @@
-import { Customer, Job, Order, Plan, Rider, Settings } from '../src/core/models';
+import { Customer, Job, Order, Plan, Rider, Settings } from '../src/app/models/models';
 
 export const settings: Settings = {
   shopName: 'ข้าวกล่อง ส่งด่วนมื้อเที่ยง',

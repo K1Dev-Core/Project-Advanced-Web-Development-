@@ -1,9 +1,10 @@
-import { Icon } from '../../shared/icon';
+import { Icon } from '../components/icon';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Api } from '../../core/api';
-import { PageTitle, RequestState } from '../shared/ui';
+import { Api } from '../services/api';
+import { PageTitle } from '../components/page-title';
+import { RequestState } from '../components/request-state';
 import { Task } from '../shared/task';
 @Component({
   imports: [Icon, FormsModule, PageTitle, RequestState],

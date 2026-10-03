@@ -1,11 +1,12 @@
-import { Icon } from '../../shared/icon';
+import { Icon } from '../components/icon';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Api } from '../../core/api';
-import { Settings, Point } from '../../core/models';
-import { ParcelMap } from '../../shared/map';
+import { Api } from '../services/api';
+import { Settings, Point } from '../models/models';
+import { ParcelMap } from '../components/parcel-map';
 import { Field, FormFields, Values } from '../shared/fields';
-import { PageTitle, RequestState } from '../shared/ui';
+import { PageTitle } from '../components/page-title';
+import { RequestState } from '../components/request-state';
 import { Task } from '../shared/task';
 @Component({
   imports: [Icon, FormsModule, FormFields, PageTitle, RequestState, ParcelMap],

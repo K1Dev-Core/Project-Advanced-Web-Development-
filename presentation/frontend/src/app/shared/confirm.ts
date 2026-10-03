@@ -6,7 +6,7 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
-import { Icon } from '../../shared/icon';
+import { Icon } from '../components/icon';
 interface Confirmation {
   title: string;
   message: string;

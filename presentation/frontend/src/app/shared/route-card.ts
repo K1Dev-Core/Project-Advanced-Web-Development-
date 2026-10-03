@@ -2,8 +2,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
-import { DeliveryRoute, Rider } from '../../core/models';
-import { DeliveryStatus } from './ui';
+import { DeliveryRoute, Rider } from '../models/models';
+import { DeliveryStatus } from '../components/delivery-status';
 @Component({
   selector: 'route-card',
   imports: [MatSelectModule, FormsModule, DecimalPipe, DeliveryStatus],

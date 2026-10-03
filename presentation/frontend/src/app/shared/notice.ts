@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { Icon } from '../../shared/icon';
+import { Icon } from '../components/icon';
 @Component({
   selector: 'app-notice',
   imports: [Icon],

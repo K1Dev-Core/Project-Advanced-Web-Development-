@@ -3,14 +3,14 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Notice } from './shared/notice';
 import { DevTools } from './shared/dev-tools';
-import { Icon } from '../shared/icon';
-import { Api } from '../core/api';
+import { Icon } from './components/icon';
+import { Api } from './services/api';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, DevTools, Notice],
   templateUrl: './app.html',
 })
-export class SimpleApp {
+export class AppComponent {
   api = inject(Api);
   readonly isDevPreview =
     window.self !== window.top || new URLSearchParams(location.search).get('dev-preview') === '1';

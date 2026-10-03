@@ -1,6 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": { "types": [] },
-  "files": ["src/simple/main.ts"],
-  "include": ["src/**/*.d.ts"]
-}

@@ -14,29 +14,20 @@ npm start --prefix frontend
 
 ## โครงสร้างที่ใช้อธิบายโค้ด
 
-โค้ดของเวอร์ชันนี้อยู่ใน `frontend/src/simple/` แต่ละหน้าแยก `.ts` สำหรับการทำงานกับ `.html` สำหรับหน้าจอ ใช้ CSS กลางไฟล์เดียว
+โค้ดแอปอยู่ใน `frontend/src/app/` แบ่งตามหน้าที่แบบ Angular: `pages/` สำหรับหน้าและ template, `components/` สำหรับ UI ที่ใช้ซ้ำ, `services/` สำหรับเรียก API, `models/` สำหรับชนิดข้อมูล, `shared/` สำหรับ controls และตัวช่วยร่วมกัน แต่ละหน้ามีไฟล์ `.ts` (ข้อมูลและการทำงาน) กับ `.html` (หน้าจอ) ส่วนธีมกลางอยู่ใน `styles.css` และ `material.scss`
 
-| ส่วน | ไฟล์ | หน้าที่ |
+| ส่วน | ตำแหน่ง | หน้าที่ |
 | --- | --- | --- |
-| จุดเริ่มต้น | `main.ts` | เปิด Angular และติดตั้ง Router |
-| เส้นทาง | `routes.ts` | กำหนด URL และตรวจสิทธิ์เจ้าของร้าน |
-| โครงหน้า | `app.ts` / `app.html` | ชื่อแอป เมนู เนื้อหาหลัก และออกจากระบบ |
-| หน้าแรก | `pages/home.*` | ทางเข้าร้านและไรเดอร์ |
-| เข้าสู่ระบบ | `pages/login.*` | รับบัญชีและเรียก API login |
-| ภาพรวม | `pages/overview.*` | สรุปจำนวนรายการ กล่อง และยอดตามวัน |
-| ลูกค้า / ไรเดอร์ / รายการ | `pages/records.*` | ตาราง ค้นหา แบ่งหน้า เพิ่ม แก้ไข ลบ |
-| ช่องกรอกตามชนิดข้อมูล | `pages/record-fields.ts` | ระบุชื่อช่องและข้อจำกัดของฟอร์ม |
-| แผนจัดส่ง | `pages/plans.*` | คำนวณตัวเลือก บันทึกร่าง เลือกไรเดอร์ ยืนยัน / คำนวณใหม่ / ยกเลิก |
-| ตั้งค่าร้าน | `pages/settings.*` | ข้อมูลร้าน พิกัด เวลา ราคา และข้อจำกัด |
-| ใบงานไรเดอร์ | `pages/rider.*` | เปิดใบงาน นำทาง เริ่มส่ง ส่งสำเร็จ และย้อนสถานะ |
-| ช่องกรอกร่วม | `shared/fields.ts` | แสดงช่องข้อความ ตัวเลข ตัวเลือก และ checkbox จากรายการ Field |
-| กล่องเส้นทาง | `shared/route-card.ts` | รายละเอียดจุดส่ง ตัวเลือกไรเดอร์ และลิงก์ใบงาน |
-| UI ชิ้นเล็ก | `shared/ui.ts` | หัวหน้า สถานะคำขอ และสถานะจัดส่ง |
-| สถานะคำขอ | `shared/task.ts` | loading, error, success และป้องกันการกดซ้ำ |
-| ตัวเลือกที่มีหลายหน้า | `shared/data.ts` | โหลดรายการให้ครบสำหรับ select |
-| รูปแบบหน้าจอ | `styles.css` | สี ระยะห่าง ตาราง ฟอร์ม และ responsive |
+| จุดเริ่มต้นและโครงหน้า | `main.ts`, `app.ts`, `app.html` | เปิด Angular, เมนูหลัก และพื้นที่แสดงหน้า |
+| เส้นทาง | `app.routes.ts` | URL, lazy loading และตรวจสิทธิ์เจ้าของร้าน |
+| หน้าจอ | `pages/` | หน้าแรก, เข้าสู่ระบบ, ภาพรวม, รายการ, แผน, ตั้งค่า และใบงานไรเดอร์ |
+| คอมโพเนนต์ใช้ซ้ำ | `components/` | ไอคอน, แผนที่, หัวข้อหน้า, สถานะคำขอ และสถานะจัดส่ง |
+| API | `services/api.ts` | HTTP, JWT, login, ข้อความ error และเชื่อม backend |
+| แบบข้อมูล | `models/models.ts` | TypeScript interfaces และค่ากลางของระบบ |
+| controls / helpers | `shared/` | ช่องกรอก, date picker, dialog, notification, task state และ dev tools |
+| CSS | `styles.css`, `material.scss` | ธีม, layout, responsive และ controls ของ Angular Material |
 
-ใช้ `frontend/src/core/api.ts`, `frontend/src/core/models.ts`, `frontend/src/shared/map.ts` และ `frontend/src/shared/icon.ts` จึงไม่ต้องเขียนระบบ HTTP, JWT, ชนิดข้อมูล หรือ Leaflet ซ้ำ
+`RecordsPage` ใช้กับเมนูลูกค้า รายการสั่ง และไรเดอร์ เพราะใช้ตารางและ CRUD รูปแบบเดียวกัน โดยเลือก field/payload ตาม route; ส่วนที่มี workflow เฉพาะมี component/page แยกต่างหาก
 
 ## ลำดับการทำงานแบบสั้น
 
@@ -92,15 +83,15 @@ Frontend มีเพียงเวอร์ชันเรียบง่า�
 - **ไรเดอร์**: สร้างชื่อ เบอร์โทร ทะเบียนรถ และสถานะพร้อมรับงาน
 - Seed เป็นตัวเลือกเพิ่มเติมสำหรับการสุ่มรูปแบบเดิม แสดงจำนวนที่จะสร้างก่อนกดปุ่ม และจำนวนที่สร้างสำเร็จพร้อม seed หลัง API ตอบกลับ
 
-เรียก POST `/simulations/customers`, `/simulations/riders`, `/simulations/orders` โดยส่ง JWT เจ้าของร้านตามเดิม ไม่ล้างข้อมูลเก่า (`clearExisting: false`) ลูกค้าและรายการอาหารมี simulated=true พร้อมป้าย “ข้อมูลทดสอบ” ในตาราง ไรเดอร์ใช้โมเดลเดิมซึ่งไม่มี simulated flag
+เรียก POST `/simulations/customers`, `/simulations/riders`, `/simulations/orders` โดยส่ง JWT เจ้าของร้านตามเดิม ไม่ล้างข้อมูลเก่า (`clearExisting: false`) ข้อมูลลูกค้าและรายการสั่งที่สร้างผ่าน Dev tools เก็บ simulated=true แต่แสดงในหน้าจอเหมือนรายการทั่วไป ไรเดอร์ใช้โมเดลเดิมซึ่งไม่มี simulated flag
 
 ขณะบันทึกปิดหน้าต่างและกดสร้างซ้ำไม่ได้ หากขั้นตอนหนึ่งล้มเหลวจะหยุดขั้นตอนที่เหลือและแสดงผลส่วนที่สำเร็จ ไม่ retry อัตโนมัติ เมื่อปิดจะรีเฟรชหน้าข้อมูลปัจจุบัน ปุ่มดูรายการส่งเปิดวันที่ที่เพิ่งสร้างไว้
 
-คอมโพเนนต์อยู่ใน `src/simple/shared/dev-tools.ts`, `.html`, `.css` ชุดทดสอบ UI อยู่ใน `simple-e2e/dev-tools.spec.ts` และชุดทดสอบ backend/MySQL จริงในเครื่องอยู่ใน `simple-e2e/dev-seeding.live.spec.ts`
+คอมโพเนนต์อยู่ใน `src/app/shared/dev-tools.ts`, `.html`, `.css` ชุดทดสอบ UI อยู่ใน `simple-e2e/dev-tools.spec.ts` และชุดทดสอบ backend/MySQL จริงในเครื่องอยู่ใน `simple-e2e/dev-seeding.live.spec.ts`
 
 ## Dropdown ปฏิทิน และกล่องยืนยัน
 
-ใช้ Angular Material/CDK 22.2.3 สำหรับ MatSelect, MatDatepicker และ MatDialog โดยกำหนดสีส้ม #C24716 พื้นขาว/พีช และฟอนต์ Noto Sans Thai ร่วมกันใน `src/simple/material.scss`
+ใช้ Angular Material/CDK 22.2.3 สำหรับ MatSelect, MatDatepicker และ MatDialog โดยกำหนดสีส้ม #C24716 พื้นขาว/พีช และฟอนต์ Noto Sans Thai ร่วมกันใน `src/app/material.scss`
 
 - ทุก dropdown รวม Dev tools ใช้ MatSelect และเก็บชนิด value เดิม เช่น customerId / riderId เป็น number
 - `shared/date-control.ts` เป็น ControlValueAccessor ใช้ปฏิทินภาษาไทย รับการพิมพ์ วว/ดด/ปปปป หรือ ISO และส่งออก yyyy-MM-dd เสมอ จึงไม่เปลี่ยน API payload และไม่แปลงผ่าน UTC จนวันเลื่อน
@@ -113,7 +104,7 @@ Frontend มีเพียงเวอร์ชันเรียบง่า�
 
 แผนที่ใช้ OpenStreetMap ผ่าน Leaflet พร้อมหมุดที่ลากได้ ปักหมุดตรงกลาง ใช้ตำแหน่งปัจจุบัน และขยายแผนที่ ซ่อนช่องพิกัดในฟอร์มแต่ยังส่ง location/shopLocation ให้ backend ตามเดิม ต้องเปิดสิทธิ์ตำแหน่งใน browser จึงใช้ GPS อุปกรณ์ได้
 
-การตั้งค่าส่งเฉพาะ field ที่แก้ไขได้ ไม่ส่ง updatedAt และแปลงเวลาเป็น HH:mm ส่วนข้อผิดพลาด validation แสดงชื่อช่องภาษาไทย `shared/notice.ts` รวมแบนเนอร์แจ้งเตือนแบบลอย และ `shared/ui.ts` รวม skeleton ระหว่างรอ API
+การตั้งค่าส่งเฉพาะ field ที่แก้ไขได้ ไม่ส่ง updatedAt และแปลงเวลาเป็น HH:mm ส่วนข้อผิดพลาด validation แสดงชื่อช่องภาษาไทย `shared/notice.ts` แสดงการแจ้งเตือน และ `components/request-state.ts` รวม skeleton กับสถานะคำขอ
 
 ข้อมูลอ้างอิงสำหรับค้นหารายการส่งใช้ซ้ำภายในหน้าปัจจุบัน เพื่อลดการขอข้อมูลทั้งรายชื่อลูกค้าและ settings ซ้ำ เมื่อต้องการรับการแก้ไขจากอุปกรณ์อื่นให้เปลี่ยนหน้าแล้วกลับมา หรือ reload
 

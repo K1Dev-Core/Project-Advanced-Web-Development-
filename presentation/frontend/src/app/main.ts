@@ -3,9 +3,9 @@ import { provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { DialogOverlayContainer } from './shared/overlay-container';
-import { SimpleApp } from './app';
-import { routes } from './routes';
-bootstrapApplication(SimpleApp, {
+import { AppComponent } from './app';
+import { routes } from './app.routes';
+bootstrapApplication(AppComponent, {
   providers: [
     { provide: OverlayContainer, useClass: DialogOverlayContainer },
     provideBrowserGlobalErrorListeners(),
