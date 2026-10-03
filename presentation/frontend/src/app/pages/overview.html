@@ -1,0 +1,51 @@
+<page-title title="ภาพรวม" description="สรุปรายการในวันที่เลือก"
+  ><label
+    >วันที่จัดส่ง<app-date
+      [(ngModel)]="date"
+      (changed)="load()"
+      [disabled]="task.busy()"
+      label="วันที่จัดส่ง" /></label
+></page-title>
+<request-state [busy]="task.busy()" [error]="task.error()" />
+@if (task.error()) {
+  <button (click)="load()">ลองอีกครั้ง</button>
+}
+@if (data(); as d) {
+  <div class="stats">
+    <section class="panel">
+      <p>รายการส่ง</p>
+      <strong>{{ d.orders.totalOrders }}</strong
+      ><small>{{ d.orders.totalBoxes }} กล่อง</small>
+    </section>
+    <section class="panel">
+      <p>ส่งสำเร็จ</p>
+      <strong>{{ d.orders.byStatus['delivered']?.orders || 0 }}</strong
+      ><small>รายการ</small>
+    </section>
+    <section class="panel">
+      <p>ไรเดอร์พร้อมรับงาน</p>
+      <strong>{{ d.riders.active }}</strong
+      ><small>คน</small>
+    </section>
+    <section class="panel">
+      <p>มูลค่ารายการ</p>
+      <strong>฿{{ d.orders.totalRevenue | number: '1.0-0' }}</strong
+      ><small>ตามรายการในระบบ</small>
+    </section>
+  </div>
+  <div class="two-columns">
+    <section class="panel">
+      <h2>จัดการรายการ</h2>
+      <p>เพิ่มลูกค้าและรายการอาหารก่อนวางแผน</p>
+      <div class="actions">
+        <a class="button primary" routerLink="/admin/orders"><ui-icon name="box" />รายการส่ง</a
+        ><a class="button" routerLink="/admin/customers"><ui-icon name="users" />ลูกค้า</a>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>รอบจัดส่ง</h2>
+      <p>ออกส่ง {{ d.shop.departureTime }} · ส่งครบก่อน {{ d.shop.deadlineTime }}</p>
+      <a class="button" routerLink="/admin/plans"><ui-icon name="route" />วางแผนจัดส่ง</a>
+    </section>
+  </div>
+}
