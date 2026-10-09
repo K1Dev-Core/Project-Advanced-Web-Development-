@@ -1,0 +1,105 @@
+<div class="page">
+  <div class="page-title">
+    <div>
+      <h1>ไรเดอร์</h1>
+      <p>พร้อมรับงาน {{ activeCount() }} จาก {{ riders().length }} คน · รับได้คนละไม่เกิน 3 ออเดอร์</p>
+    </div>
+    <div class="row wrap">
+      <button class="btn soft" type="button" (click)="simulate()">
+        <lucide-icon name="sparkles" [size]="18"></lucide-icon>
+        เพิ่มตัวอย่าง 5 คน
+      </button>
+      <button class="btn primary" type="button" (click)="openCreate()">
+        <lucide-icon name="plus" [size]="18"></lucide-icon>
+        เพิ่มไรเดอร์
+      </button>
+    </div>
+  </div>
+
+  <div class="input-icon search">
+    <lucide-icon name="search" [size]="18"></lucide-icon>
+    <input class="input" placeholder="ค้นหาชื่อ เบอร์ หรือทะเบียนรถ" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+  </div>
+
+  @if (loading()) {
+    <div class="grid cols-3">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="skeleton" style="height: 150px"></div>
+      }
+    </div>
+  } @else if (visible().length) {
+    <div class="grid cols-3">
+      @for (rider of visible(); track rider.id) {
+        <article class="rider card" [class.off]="!rider.active">
+          <div class="row">
+            <div class="avatar big">{{ rider.name | initial }}</div>
+            <div class="who">
+              <strong>{{ rider.name }}</strong>
+              <span class="badge" [class.green]="rider.active">{{ rider.active ? 'พร้อมรับงาน' : 'พักงาน' }}</span>
+            </div>
+          </div>
+          <div class="meta">
+            <span><lucide-icon name="phone" [size]="15"></lucide-icon>{{ rider.phone || '-' }}</span>
+            <span><lucide-icon name="bike" [size]="15"></lucide-icon>{{ rider.vehiclePlate || '-' }}</span>
+          </div>
+          <div class="row foot">
+            <label class="switch">
+              <input type="checkbox" [checked]="rider.active" (change)="toggleActive(rider)" />
+              <span></span>
+              รับงาน
+            </label>
+            <span class="spacer"></span>
+            @if (rider.phone) {
+              <a class="btn ghost icon sm" [href]="'tel:' + rider.phone" aria-label="โทร"><lucide-icon name="phone" [size]="16"></lucide-icon></a>
+            }
+            <button class="btn ghost icon sm" type="button" (click)="openEdit(rider)" aria-label="แก้ไข"><lucide-icon name="pencil" [size]="16"></lucide-icon></button>
+            <button class="btn ghost icon sm" type="button" (click)="remove(rider)" aria-label="ลบ"><lucide-icon name="trash-2" [size]="16"></lucide-icon></button>
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="card">
+      <app-empty-state title="ยังไม่มีไรเดอร์" text="เพิ่มรายชื่อไรเดอร์ที่ร้านเรียกใช้ เพื่อมอบหมายเส้นทางให้แต่ละคน">
+        <button class="btn primary" type="button" (click)="openCreate()">
+          <lucide-icon name="plus" [size]="18"></lucide-icon>
+          เพิ่มไรเดอร์
+        </button>
+      </app-empty-state>
+    </div>
+  }
+</div>
+
+<app-modal [open]="formOpen()" [title]="editing() ? 'แก้ไขไรเดอร์' : 'เพิ่มไรเดอร์'" (closed)="formOpen.set(false)">
+  <div class="stack lg">
+    <div class="field">
+      <label for="rn">ชื่อ - นามสกุล *</label>
+      <input id="rn" class="input" [(ngModel)]="form.name" placeholder="เช่น ประยุทธ ขับดี" />
+    </div>
+    <div class="grid cols-2">
+      <div class="field">
+        <label for="rp">เบอร์โทร</label>
+        <input id="rp" class="input" [(ngModel)]="form.phone" inputmode="tel" placeholder="08x-xxx-xxxx" />
+      </div>
+      <div class="field">
+        <label for="rv">ทะเบียนรถ</label>
+        <input id="rv" class="input" [(ngModel)]="form.vehiclePlate" placeholder="1กข 1234" />
+      </div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" [(ngModel)]="form.active" />
+      <span></span>
+      พร้อมรับงาน
+    </label>
+    @if (formError()) {
+      <p class="error-text">{{ formError() }}</p>
+    }
+  </div>
+  <div modal-footer class="row footer-row">
+    <button class="btn outline" type="button" (click)="formOpen.set(false)">ยกเลิก</button>
+    <button class="btn primary" type="button" (click)="save()" [disabled]="saving()">
+      <lucide-icon name="check" [size]="18"></lucide-icon>
+      บันทึก
+    </button>
+  </div>
+</app-modal>

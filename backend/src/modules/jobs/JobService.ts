@@ -143,6 +143,7 @@ export class JobService {
       instructions,
       navigationUrl: route.navigationUrl,
       path: route.path,
+      geometry: route.geometry,
       stops: route.stops.map((stop) => ({
         id: stop.id,
         sequence: stop.sequence,

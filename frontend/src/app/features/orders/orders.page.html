@@ -1,0 +1,243 @@
+<div class="page">
+  <div class="page-title">
+    <div>
+      <h1>ออเดอร์</h1>
+      <p>ออเดอร์ละไม่เกิน 3 กล่อง · ส่งวันที่ {{ date() | thaiDate }}</p>
+    </div>
+    <div class="row wrap">
+      <button class="btn danger" type="button" (click)="clearSimulated()" [disabled]="working()">
+        <lucide-icon name="trash-2" [size]="18"></lucide-icon>
+        <span class="desktop-only">ล้างออเดอร์จำลอง</span>
+      </button>
+      <button class="btn soft" type="button" (click)="simulate()" [disabled]="working()">
+        <lucide-icon [name]="working() ? 'loader-circle' : 'sparkles'" [size]="18" [class.spin]="working()"></lucide-icon>
+        จำลอง 20–30 รายการ
+      </button>
+      <button class="btn primary" type="button" (click)="openForm()">
+        <lucide-icon name="plus" [size]="18"></lucide-icon>
+        เพิ่มออเดอร์
+      </button>
+    </div>
+  </div>
+
+  <section class="summary">
+    <div class="sum card">
+      <lucide-icon name="shopping-bag" [size]="20"></lucide-icon>
+      <div><span>ออเดอร์</span><strong class="mono">{{ summary()?.totalOrders ?? 0 }}</strong></div>
+    </div>
+    <div class="sum card">
+      <lucide-icon name="package" [size]="20"></lucide-icon>
+      <div><span>กล่อง</span><strong class="mono">{{ summary()?.totalBoxes ?? 0 }}</strong></div>
+    </div>
+    <div class="sum card">
+      <lucide-icon name="coins" [size]="20"></lucide-icon>
+      <div><span>ยอดขาย</span><strong class="mono">{{ summary()?.totalRevenue ?? 0 | baht }}</strong></div>
+    </div>
+    <div class="sum card">
+      <lucide-icon name="timer" [size]="20"></lucide-icon>
+      <div><span>รอจัดส่ง</span><strong class="mono">{{ summary()?.byStatus?.pending?.orders ?? 0 }}</strong></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="input-icon search">
+        <lucide-icon name="search" [size]="18"></lucide-icon>
+        <input class="input" placeholder="ค้นหาชื่อลูกค้า เบอร์ หรือเลขออเดอร์" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      </div>
+      <input class="input date" type="date" [ngModel]="date()" (ngModelChange)="setDate($event)" />
+      <button class="chip" type="button" [class.active]="nearbyOnly()" (click)="toggleNearby()">
+        <lucide-icon name="locate-fixed" [size]="16"></lucide-icon>
+        ในรัศมี 2 กม.
+      </button>
+    </div>
+    <div class="chip-group filters">
+      @for (filter of statusFilters; track filter.key) {
+        <button class="chip" type="button" [class.active]="status() === filter.key" (click)="status.set(filter.key)">
+          {{ filter.text }}
+          <span class="count">{{ counts()[filter.key] || 0 }}</span>
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="loading-list">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="skeleton row-skel"></div>
+        }
+      </div>
+    } @else if (visible().length === 0) {
+      <app-empty-state
+        title="ยังไม่มีออเดอร์"
+        [text]="orders().length ? 'ไม่พบออเดอร์ที่ตรงกับตัวกรอง' : 'ลองจำลองออเดอร์ 20–30 รายการเพื่อทดสอบระบบ หรือเพิ่มออเดอร์ใหม่'"
+      >
+        @if (!orders().length) {
+          <button class="btn soft" type="button" (click)="simulate()">
+            <lucide-icon name="sparkles" [size]="18"></lucide-icon>
+            จำลองออเดอร์
+          </button>
+        }
+      </app-empty-state>
+    } @else {
+      <div class="table-wrap desktop-only">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ออเดอร์</th>
+              <th>ลูกค้า</th>
+              <th>จำนวนกล่อง</th>
+              <th>ราคา</th>
+              @if (nearbyOnly()) {
+                <th>ระยะจากร้าน</th>
+              }
+              <th>สถานะ</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of visible(); track order.id) {
+              <tr>
+                <td>
+                  <div class="order-id mono">#{{ order.id }}</div>
+                  @if (order.simulated) {
+                    <span class="badge tiny-badge">จำลอง</span>
+                  }
+                </td>
+                <td>
+                  <div class="row">
+                    <div class="avatar">{{ order.customer.fullName | initial }}</div>
+                    <div class="who">
+                      <strong>{{ order.customer.fullName }}</strong>
+                      <span class="muted small">{{ order.customer.phone }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="stepper">
+                    <button type="button" (click)="changeBoxes(order, -1)" [disabled]="order.status !== 'pending' || busy() === order.id" aria-label="ลดกล่อง">
+                      <lucide-icon name="minus" [size]="16"></lucide-icon>
+                    </button>
+                    <span class="mono">{{ order.boxes }}</span>
+                    <button type="button" (click)="changeBoxes(order, 1)" [disabled]="order.status !== 'pending' || order.boxes >= 3 || busy() === order.id" aria-label="เพิ่มกล่อง">
+                      <lucide-icon name="plus" [size]="16"></lucide-icon>
+                    </button>
+                  </div>
+                </td>
+                <td class="mono">{{ order.totalPrice | baht }}</td>
+                @if (nearbyOnly()) {
+                  <td class="mono">{{ order.distanceKm | km: 2 }}</td>
+                }
+                <td><span class="badge" [class]="labels.orderStatus[order.status].tone">{{ labels.orderStatus[order.status].text }}</span></td>
+                <td class="actions">
+                  <button class="btn ghost icon sm" type="button" (click)="remove(order)" [disabled]="order.status === 'assigned'" aria-label="ลบ">
+                    <lucide-icon name="trash-2" [size]="17"></lucide-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cards mobile-only">
+        @for (order of visible(); track order.id) {
+          <article class="o-card">
+            <div class="row between">
+              <div class="row">
+                <div class="avatar">{{ order.customer.fullName | initial }}</div>
+                <div class="who">
+                  <strong>{{ order.customer.fullName }}</strong>
+                  <span class="muted small">#{{ order.id }} · {{ order.customer.phone }}</span>
+                </div>
+              </div>
+              <span class="badge" [class]="labels.orderStatus[order.status].tone">{{ labels.orderStatus[order.status].text }}</span>
+            </div>
+            <div class="row between o-foot">
+              <div class="stepper">
+                <button type="button" (click)="changeBoxes(order, -1)" [disabled]="order.status !== 'pending' || busy() === order.id" aria-label="ลดกล่อง">
+                  <lucide-icon name="minus" [size]="16"></lucide-icon>
+                </button>
+                <span class="mono">{{ order.boxes }} กล่อง</span>
+                <button type="button" (click)="changeBoxes(order, 1)" [disabled]="order.status !== 'pending' || order.boxes >= 3 || busy() === order.id" aria-label="เพิ่มกล่อง">
+                  <lucide-icon name="plus" [size]="16"></lucide-icon>
+                </button>
+              </div>
+              <div class="row">
+                @if (nearbyOnly()) {
+                  <span class="muted small">{{ order.distanceKm | km: 2 }}</span>
+                }
+                <strong class="mono">{{ order.totalPrice | baht }}</strong>
+                <button class="btn ghost icon sm" type="button" (click)="remove(order)" [disabled]="order.status === 'assigned'" aria-label="ลบ">
+                  <lucide-icon name="trash-2" [size]="17"></lucide-icon>
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</div>
+
+<app-modal [open]="formOpen()" title="เพิ่มออเดอร์ใหม่" (closed)="formOpen.set(false)">
+  <div class="stack lg">
+    <div class="field">
+      <label>เลือกลูกค้า</label>
+      @if (selectedCustomer(); as customer) {
+        <div class="picked">
+          <div class="avatar">{{ customer.fullName | initial }}</div>
+          <div class="who">
+            <strong>{{ customer.fullName }}</strong>
+            <span class="muted small">{{ customer.phone }} · {{ customer.address || 'ไม่ระบุที่อยู่' }}</span>
+          </div>
+          <button class="btn ghost sm" type="button" (click)="selectedCustomer.set(null)">เปลี่ยน</button>
+        </div>
+      } @else {
+        <div class="input-icon">
+          <lucide-icon name="search" [size]="18"></lucide-icon>
+          <input class="input" placeholder="พิมพ์ชื่อหรือเบอร์โทร" [ngModel]="customerSearch()" (ngModelChange)="customerSearch.set($event)" />
+        </div>
+        <div class="customer-list">
+          @for (customer of filteredCustomers(); track customer.id) {
+            <button type="button" class="customer-option" (click)="selectedCustomer.set(customer)">
+              <div class="avatar sm">{{ customer.fullName | initial }}</div>
+              <span class="who">
+                <strong>{{ customer.fullName }}</strong>
+                <span class="muted small">{{ customer.phone }}</span>
+              </span>
+              <lucide-icon name="chevron-right" [size]="18" class="muted"></lucide-icon>
+            </button>
+          } @empty {
+            <p class="muted small empty-customers">ไม่พบลูกค้า เพิ่มลูกค้าได้ที่เมนู "ลูกค้า"</p>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <label>จำนวนกล่อง</label>
+      <div class="box-picker">
+        @for (n of [1, 2, 3]; track n) {
+          <button type="button" [class.active]="newBoxes() === n" (click)="newBoxes.set(n)">
+            <strong>{{ n }}</strong>
+            <span>กล่อง</span>
+            <small>{{ n * 65 | baht }}</small>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="note">หมายเหตุ (ถ้ามี)</label>
+      <input id="note" class="input" [(ngModel)]="newNote" placeholder="เช่น ไม่ใส่ผัก, ฝากไว้ที่ป้อมยาม" />
+    </div>
+  </div>
+
+  <div modal-footer class="row footer-row">
+    <button class="btn outline" type="button" (click)="formOpen.set(false)">ยกเลิก</button>
+    <button class="btn primary" type="button" (click)="createOrder()" [disabled]="!selectedCustomer() || working()">
+      <lucide-icon name="check" [size]="18"></lucide-icon>
+      บันทึกออเดอร์
+    </button>
+  </div>
+</app-modal>

@@ -1,0 +1,75 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a routerLink="/app/dashboard" class="brand-link"><app-brand /></a>
+
+    <nav class="side-nav">
+      @for (item of nav; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active" class="nav-item">
+          <lucide-icon [name]="item.icon" [size]="20"></lucide-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+      <div class="nav-sep"></div>
+      <a routerLink="/app/settings" routerLinkActive="active" class="nav-item">
+        <lucide-icon name="settings" [size]="20"></lucide-icon>
+        <span>ตั้งค่าร้าน</span>
+      </a>
+      <a routerLink="/rider" class="nav-item" target="_blank">
+        <lucide-icon name="smartphone" [size]="20"></lucide-icon>
+        <span>หน้าจอไรเดอร์</span>
+        <lucide-icon name="external-link" [size]="14" class="ext"></lucide-icon>
+      </a>
+    </nav>
+
+    <div class="promo">
+      <div class="promo-title">
+        <lucide-icon name="timer" [size]="18"></lucide-icon>
+        ออกส่ง 11:30 · ถึงมือก่อน 12:30
+      </div>
+      <p>ไรเดอร์รับไม่เกินคนละ 3 ออเดอร์ ระบบคิดเส้นทางที่ถูกที่สุดให้</p>
+    </div>
+
+    <div class="user">
+      <div class="avatar">
+        <lucide-icon name="store" [size]="18"></lucide-icon>
+      </div>
+      <div class="user-text">
+        <strong>{{ auth.displayName() }}</strong>
+        <span>เจ้าของร้าน</span>
+      </div>
+      <button class="btn ghost icon sm" type="button" (click)="logout()" aria-label="ออกจากระบบ">
+        <lucide-icon name="log-out" [size]="18"></lucide-icon>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <a routerLink="/app/dashboard" class="mobile-brand"><app-brand /></a>
+      <div class="today desktop-only">
+        <lucide-icon name="calendar" [size]="18"></lucide-icon>
+        <span>{{ today }}</span>
+      </div>
+      <div class="spacer"></div>
+      <a routerLink="/app/settings" class="btn ghost icon mobile-settings" aria-label="ตั้งค่าร้าน">
+        <lucide-icon name="settings" [size]="20"></lucide-icon>
+      </a>
+      <button class="btn ghost icon mobile-settings" type="button" (click)="logout()" aria-label="ออกจากระบบ">
+        <lucide-icon name="log-out" [size]="20"></lucide-icon>
+      </button>
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    @for (item of nav; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" class="tab">
+        <span class="tab-icon"><lucide-icon [name]="item.icon" [size]="22"></lucide-icon></span>
+        <span>{{ item.short }}</span>
+      </a>
+    }
+  </nav>
+</div>

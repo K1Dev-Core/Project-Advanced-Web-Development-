@@ -1,0 +1,75 @@
+<div class="auth">
+  <section class="panel art-panel">
+    <a routerLink="/"><app-brand [light]="true" /></a>
+    <div class="art">
+      <app-food-box-illustration />
+    </div>
+    <div class="art-text">
+      <h2>ข้าวร้อน ๆ ถึงมือก่อนพักเที่ยงหมด</h2>
+      <p>ระบบจัดเส้นทางให้ไรเดอร์ทุกคน ประหยัดค่าส่ง และเห็นกำไรทันที</p>
+    </div>
+  </section>
+
+  <section class="panel form-panel">
+    <a routerLink="/" class="back">
+      <lucide-icon name="chevron-left" [size]="18"></lucide-icon>
+      กลับหน้าแรก
+    </a>
+    <form class="form" (ngSubmit)="submit()">
+      <div class="mobile-brand"><app-brand /></div>
+      <div>
+        <h1>เข้าสู่ระบบเจ้าของร้าน</h1>
+        <p class="muted">จัดการออเดอร์และจัดเส้นทางส่งของวันนี้</p>
+      </div>
+
+      <div class="field">
+        <label for="username">ชื่อผู้ใช้</label>
+        <div class="input-icon">
+          <lucide-icon name="user" [size]="18"></lucide-icon>
+          <input id="username" class="input" name="username" [(ngModel)]="username" autocomplete="username" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">รหัสผ่าน</label>
+        <div class="input-icon pw">
+          <lucide-icon name="key-round" [size]="18"></lucide-icon>
+          <input
+            id="password"
+            class="input"
+            name="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            [(ngModel)]="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+          <button type="button" class="eye" (click)="showPassword.set(!showPassword())" aria-label="แสดงรหัสผ่าน">
+            <lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18"></lucide-icon>
+          </button>
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="alert">
+          <lucide-icon name="triangle-alert" [size]="18"></lucide-icon>
+          {{ error() }}
+        </div>
+      }
+
+      <button class="btn primary lg block" type="submit" [disabled]="loading()">
+        @if (loading()) {
+          <lucide-icon name="loader-circle" [size]="20" class="spin"></lucide-icon>
+          กำลังเข้าสู่ระบบ...
+        } @else {
+          เข้าสู่ระบบ
+          <lucide-icon name="arrow-right" [size]="20"></lucide-icon>
+        }
+      </button>
+
+      <a routerLink="/rider" class="rider-link">
+        <lucide-icon name="bike" [size]="18"></lucide-icon>
+        เป็นไรเดอร์? เปิดใบงานที่นี่
+      </a>
+    </form>
+  </section>
+</div>

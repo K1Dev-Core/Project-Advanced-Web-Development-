@@ -1,0 +1,103 @@
+<div class="page">
+  <div class="page-title">
+    <div>
+      <h1>ตั้งค่าร้าน</h1>
+      <p>ราคา ต้นทุน ค่าไรเดอร์ และเวลาออกส่ง ใช้ในการคำนวณเส้นทางทุกครั้ง</p>
+    </div>
+    <button class="btn primary" type="button" (click)="save()" [disabled]="saving() || !form">
+      <lucide-icon [name]="saving() ? 'loader-circle' : 'check'" [size]="18" [class.spin]="saving()"></lucide-icon>
+      บันทึกการตั้งค่า
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="skeleton" style="height: 420px"></div>
+  } @else if (form) {
+    <div class="layout">
+      <div class="stack lg">
+        <section class="card">
+          <div class="card-head"><lucide-icon name="store" [size]="20" class="hi"></lucide-icon><h3>ข้อมูลร้าน</h3></div>
+          <div class="card-body stack">
+            <div class="field">
+              <label for="sn">ชื่อร้าน</label>
+              <input id="sn" class="input" [(ngModel)]="form.shopName" />
+            </div>
+            <div class="field">
+              <label for="sa">ที่อยู่ร้าน</label>
+              <input id="sa" class="input" [(ngModel)]="form.shopAddress" />
+            </div>
+            <div class="field">
+              <label>ตำแหน่งร้าน (แตะบนแผนที่เพื่อย้าย)</label>
+              <app-map class="shop-map" [picked]="location()" [pickable]="true" (pick)="location.set($event)" />
+              <span class="hint">{{ location()?.latitude }}, {{ location()?.longitude }}</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="stack lg">
+        <section class="card">
+          <div class="card-head"><lucide-icon name="coins" [size]="20" class="hi"></lucide-icon><h3>ราคาและต้นทุน</h3></div>
+          <div class="card-body grid cols-2">
+            <div class="field">
+              <label for="bp">ราคาขายต่อกล่อง (บาท)</label>
+              <input id="bp" class="input" type="number" min="0" [(ngModel)]="form.boxPrice" (ngModelChange)="touch()" />
+            </div>
+            <div class="field">
+              <label for="bc">ต้นทุนต่อกล่อง (บาท)</label>
+              <input id="bc" class="input" type="number" min="0" [(ngModel)]="form.boxCost" (ngModelChange)="touch()" />
+            </div>
+            <div class="field">
+              <label for="rf">ค่าเรียกไรเดอร์ต่อรอบ</label>
+              <input id="rf" class="input" type="number" min="0" [(ngModel)]="form.riderBaseFee" (ngModelChange)="touch()" />
+            </div>
+            <div class="field">
+              <label for="rk">บาท / กม. / กล่อง</label>
+              <input id="rk" class="input" type="number" min="0" step="0.5" [(ngModel)]="form.riderFeePerKmPerBox" (ngModelChange)="touch()" />
+            </div>
+          </div>
+          @if (example(); as ex) {
+            <div class="example">
+              <lucide-icon name="info" [size]="18"></lucide-icon>
+              <span>
+                ตัวอย่าง: ไรเดอร์รับ {{ ex.boxes }} กล่อง วิ่ง {{ ex.km }} กม. ค่าส่ง
+                {{ form.riderBaseFee }} + {{ form.riderFeePerKmPerBox }} × {{ ex.boxes }} × {{ ex.km }} =
+                <b>{{ ex.fee | baht }}</b> · กำไรรอบนี้ <b [class.neg]="ex.margin < 0">{{ ex.margin | baht }}</b>
+              </span>
+            </div>
+          }
+        </section>
+
+        <section class="card">
+          <div class="card-head"><lucide-icon name="timer" [size]="20" class="hi"></lucide-icon><h3>เวลาและเงื่อนไขการส่ง</h3></div>
+          <div class="card-body grid cols-2">
+            <div class="field">
+              <label for="dt">เวลาออกจากร้าน</label>
+              <input id="dt" class="input" type="time" [(ngModel)]="form.departureTime" />
+            </div>
+            <div class="field">
+              <label for="dw">ต้องถึงภายใน (นาที)</label>
+              <input id="dw" class="input" type="number" min="1" [(ngModel)]="form.deliveryWindowMinutes" />
+            </div>
+            <div class="field">
+              <label for="mo">ไรเดอร์รับได้สูงสุด (ออเดอร์)</label>
+              <input id="mo" class="input" type="number" min="1" [(ngModel)]="form.maxOrdersPerRider" />
+            </div>
+            <div class="field">
+              <label for="mb">กล่องสูงสุดต่อออเดอร์</label>
+              <input id="mb" class="input" type="number" min="1" [(ngModel)]="form.maxBoxesPerOrder" />
+            </div>
+            <div class="field">
+              <label for="sp">ความเร็วไรเดอร์ (กม./ชม.)</label>
+              <input id="sp" class="input" type="number" min="1" [(ngModel)]="form.riderSpeedKmh" />
+            </div>
+            <div class="field">
+              <label for="sm">เวลาส่งของต่อจุด (นาที)</label>
+              <input id="sm" class="input" type="number" min="0" [(ngModel)]="form.serviceMinutesPerStop" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+</div>

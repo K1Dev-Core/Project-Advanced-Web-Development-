@@ -1,0 +1,147 @@
+<div class="page">
+  <div class="page-title">
+    <div>
+      <h1>สวัสดี เจ้าของร้าน</h1>
+      <p>{{ data()?.deliveryDate | thaiDate }} · {{ countdown() || 'กำลังโหลดข้อมูลร้าน' }}</p>
+    </div>
+    <button class="btn outline" type="button" (click)="load()" [disabled]="loading()">
+      <lucide-icon name="refresh-cw" [size]="18" [class.spin]="loading()"></lucide-icon>
+      รีเฟรช
+    </button>
+  </div>
+
+  <section class="hero">
+    <div class="hero-text">
+      <span class="pill"><lucide-icon name="timer" [size]="16"></lucide-icon> รอบส่งมื้อเที่ยง</span>
+      <h2>
+        @if (data(); as d) {
+          มีออเดอร์รอจัดส่ง {{ d.orders.byStatus.pending.orders }} รายการ
+        } @else {
+          กำลังโหลด...
+        }
+      </h2>
+      <p>
+        ออกจากร้าน {{ data()?.shop?.departureTime ?? '11:30' }} น. และต้องถึงมือลูกค้าทุกคนก่อน
+        {{ data()?.shop?.deadlineTime ?? '12:30' }} น.
+      </p>
+      <div class="row wrap actions">
+        <a class="btn lg light" routerLink="/app/planning">
+          <lucide-icon name="wand-sparkles" [size]="20"></lucide-icon>
+          จัดเส้นทางเลย
+        </a>
+        <button class="btn lg glass" type="button" (click)="simulate()" [disabled]="simulating()">
+          <lucide-icon [name]="simulating() ? 'loader-circle' : 'sparkles'" [size]="20" [class.spin]="simulating()"></lucide-icon>
+          จำลองออเดอร์ 20–30 รายการ
+        </button>
+      </div>
+    </div>
+    <div class="hero-meter">
+      <div class="meter-value mono">{{ data()?.orders?.totalBoxes ?? 0 }}</div>
+      <div class="meter-label">กล่องที่ต้องส่งวันนี้</div>
+    </div>
+  </section>
+
+  <section class="grid cols-4">
+    @if (loading() && !data()) {
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton stat-skel"></div>
+      }
+    } @else if (data(); as d) {
+      <app-stat-card icon="shopping-bag" label="ออเดอร์วันนี้" [value]="d.orders.totalOrders" [hint]="d.orders.totalBoxes + ' กล่อง'" />
+      <app-stat-card icon="coins" tone="green" label="ยอดขาย" [value]="d.orders.totalRevenue | baht" hint="กล่องละ 65 บาท" />
+      <app-stat-card icon="users" tone="blue" label="ลูกค้าทั้งหมด" [value]="d.customers.total" hint="ในรัศมี 3 กม." />
+      <app-stat-card icon="bike" tone="yellow" label="ไรเดอร์พร้อมรับงาน" [value]="d.riders.active" hint="คนละไม่เกิน 3 ออเดอร์" />
+    }
+  </section>
+
+  <section class="two-col">
+    <div class="card map-card">
+      <div class="card-head">
+        <lucide-icon name="map-pinned" [size]="20" class="head-icon"></lucide-icon>
+        <h3>ออเดอร์วันนี้บนแผนที่</h3>
+        <span class="spacer"></span>
+        <div class="legend desktop-only">
+          <span><i class="dot" style="background: #ff5a1f"></i>รอจัดส่ง</span>
+          <span><i class="dot" style="background: #2f6fed"></i>จัดรถแล้ว</span>
+          <span><i class="dot" style="background: #12a150"></i>ส่งแล้ว</span>
+        </div>
+      </div>
+      <app-map class="map" [markers]="markers()" [shop]="data()?.shop?.location ?? null" />
+    </div>
+
+    <div class="stack lg side">
+      <div class="card">
+        <div class="card-head">
+          <lucide-icon name="route" [size]="20" class="head-icon"></lucide-icon>
+          <h3>แผนจัดส่งล่าสุด</h3>
+        </div>
+        <div class="card-body">
+          @if (data()?.plans?.active; as plan) {
+            <div class="plan">
+              <div class="row between">
+                <span class="badge" [class]="labels.planStatus[plan.status].tone">{{ labels.planStatus[plan.status].text }}</span>
+                <span class="muted small">ครั้งที่ {{ plan.revision }}</span>
+              </div>
+              <div class="plan-grid">
+                <div>
+                  <span class="muted small">ไรเดอร์</span>
+                  <strong>{{ plan.summary.riderCount }} คน</strong>
+                </div>
+                <div>
+                  <span class="muted small">ค่าส่งรวม</span>
+                  <strong>{{ plan.summary.totalRiderFee | baht }}</strong>
+                </div>
+                <div>
+                  <span class="muted small">กำไรสุทธิ</span>
+                  <strong [class.profit]="plan.summary.isProfitable" [class.loss]="!plan.summary.isProfitable">
+                    {{ plan.summary.netProfit | baht }}
+                  </strong>
+                </div>
+                <div>
+                  <span class="muted small">ถึงจุดสุดท้าย</span>
+                  <strong>{{ plan.summary.latestArrivalTime }} น.</strong>
+                </div>
+              </div>
+              <div class="on-time" [class.late]="!plan.summary.onTime">
+                <lucide-icon [name]="plan.summary.onTime ? 'circle-check' : 'triangle-alert'" [size]="18"></lucide-icon>
+                {{ plan.summary.onTime ? 'ส่งทันทุกจุดก่อน ' + plan.summary.deadlineTime : 'มี ' + plan.summary.lateStops + ' จุดที่อาจส่งช้า' }}
+              </div>
+              <a class="btn soft block" routerLink="/app/planning">
+                ดูเส้นทางบนแผนที่
+                <lucide-icon name="arrow-right" [size]="18"></lucide-icon>
+              </a>
+            </div>
+          } @else {
+            <div class="no-plan">
+              <p class="muted">ยังไม่ได้จัดเส้นทางของวันนี้</p>
+              <a class="btn primary block" routerLink="/app/planning">
+                <lucide-icon name="wand-sparkles" [size]="18"></lucide-icon>
+                เริ่มจัดเส้นทาง
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <lucide-icon name="clipboard-list" [size]="20" class="head-icon"></lucide-icon>
+          <h3>สถานะออเดอร์</h3>
+        </div>
+        <div class="card-body stack">
+          <div class="bar">
+            @for (item of statusBars(); track item.status) {
+              <span [attr.data-tone]="item.tone" [style.width.%]="item.percent"></span>
+            }
+          </div>
+          @for (item of statusBars(); track item.status) {
+            <div class="row between status-row">
+              <span class="row"><i class="dot" [attr.data-tone]="item.tone"></i>{{ item.label }}</span>
+              <strong class="mono">{{ item.count }}</strong>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

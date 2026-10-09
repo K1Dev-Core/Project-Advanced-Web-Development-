@@ -1,0 +1,63 @@
+<div class="entry">
+  <header class="top">
+    <a routerLink="/"><app-brand [light]="true" /></a>
+  </header>
+
+  <div class="art">
+    <app-rider-illustration />
+  </div>
+
+  <form class="sheet" (ngSubmit)="open()">
+    <h1>ใบงานไรเดอร์</h1>
+    <p class="muted">กรอกเลขใบงานที่ได้รับจากร้าน เพื่อดูจุดส่งของวันนี้</p>
+
+    <input
+      class="code-input"
+      name="code"
+      [ngModel]="code"
+      (ngModelChange)="normalize($event)"
+      placeholder="เช่น WV2F5Z"
+      autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      inputmode="text"
+      aria-label="เลขใบงาน"
+    />
+
+    @if (error()) {
+      <div class="alert">
+        <lucide-icon name="triangle-alert" [size]="18"></lucide-icon>
+        {{ error() }}
+      </div>
+    }
+
+    <button class="btn primary lg block" type="submit" [disabled]="loading()">
+      @if (loading()) {
+        <lucide-icon name="loader-circle" [size]="20" class="spin"></lucide-icon>
+        กำลังเปิดใบงาน...
+      } @else {
+        เปิดใบงาน
+        <lucide-icon name="arrow-right" [size]="20"></lucide-icon>
+      }
+    </button>
+
+    @if (recent().length) {
+      <div class="recent">
+        <span class="muted small">ใบงานล่าสุด</span>
+        <div class="chip-group">
+          @for (item of recent(); track item) {
+            <button type="button" class="chip" (click)="open(item)">
+              <lucide-icon name="clipboard-list" [size]="15"></lucide-icon>
+              {{ item }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <a routerLink="/login" class="owner-link">
+      <lucide-icon name="store" [size]="16"></lucide-icon>
+      สำหรับเจ้าของร้าน
+    </a>
+  </form>
+</div>

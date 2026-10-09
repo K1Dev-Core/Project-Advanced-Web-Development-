@@ -1,0 +1,42 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.hi {
+  color: var(--brand);
+}
+
+.shop-map {
+  height: 320px;
+  border: 1px solid var(--line);
+}
+
+.example {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 18px 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--brand-50);
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+.example lucide-icon {
+  color: var(--brand);
+  margin-top: 2px;
+}
+
+.neg {
+  color: var(--red);
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

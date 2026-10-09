@@ -1,0 +1,176 @@
+<div class="page">
+  <div class="page-title">
+    <div>
+      <h1>ลูกค้า</h1>
+      <p>รู้ว่าบ้านลูกค้าแต่ละคนอยู่ตรงไหนบนแผนที่ · ทั้งหมด {{ customers().length }} คน</p>
+    </div>
+    <button class="btn primary" type="button" (click)="openCreate()">
+      <lucide-icon name="plus" [size]="18"></lucide-icon>
+      เพิ่มลูกค้า
+    </button>
+  </div>
+
+  <div class="view-switch mobile-only">
+    <button type="button" [class.active]="mobileView() === 'list'" (click)="mobileView.set('list')">
+      <lucide-icon name="clipboard-list" [size]="18"></lucide-icon> รายชื่อ
+    </button>
+    <button type="button" [class.active]="mobileView() === 'map'" (click)="mobileView.set('map')">
+      <lucide-icon name="map" [size]="18"></lucide-icon> แผนที่
+    </button>
+  </div>
+
+  <section class="layout">
+    <div class="card list-pane" [class.hide-mobile]="mobileView() === 'map'">
+      <div class="list-tools">
+        <div class="input-icon">
+          <lucide-icon name="search" [size]="18"></lucide-icon>
+          <input class="input" placeholder="ค้นจากชื่อ นามสกุล หรือเบอร์" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+        </div>
+        <div class="row wrap">
+          <button class="chip" type="button" [class.active]="nearbyMode()" (click)="toggleNearby()">
+            <lucide-icon name="locate-fixed" [size]="16"></lucide-icon>
+            ค้นในรัศมี
+          </button>
+          @if (nearbyMode()) {
+            @for (r of [0.5, 1, 2, 3]; track r) {
+              <button class="chip radius" type="button" [class.active]="nearbyRadius() === r" (click)="setRadius(r)">{{ r }} กม.</button>
+            }
+          }
+        </div>
+        @if (nearbyMode()) {
+          <p class="hint">
+            พบ {{ visible().length }} คนในรัศมี {{ nearbyRadius() }} กม. · แตะบนแผนที่เพื่อย้ายจุดศูนย์กลาง
+          </p>
+        }
+      </div>
+
+      <div class="list">
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="skeleton item-skel"></div>
+          }
+        } @else {
+          @for (customer of visible(); track customer.id) {
+            <article class="item" [class.selected]="selectedId() === customer.id" (click)="select(customer)">
+              <div class="avatar">{{ customer.fullName | initial }}</div>
+              <div class="info">
+                <div class="row name-row">
+                  <strong>{{ customer.fullName }}</strong>
+                  @if (customer.simulated) {
+                    <span class="badge sim">จำลอง</span>
+                  }
+                </div>
+                <span class="muted small row phone">
+                  <lucide-icon name="phone" [size]="13"></lucide-icon>{{ customer.phone }}
+                  @if (customer.distanceKm !== undefined) {
+                    <span class="dist">· {{ customer.distanceKm | km: 2 }}</span>
+                  }
+                </span>
+                @if (customer.address) {
+                  <span class="muted tiny addr">{{ customer.address }}</span>
+                }
+              </div>
+              <div class="item-actions">
+                <button class="btn ghost icon sm" type="button" (click)="openEdit(customer); $event.stopPropagation()" aria-label="แก้ไข">
+                  <lucide-icon name="pencil" [size]="16"></lucide-icon>
+                </button>
+                <button class="btn ghost icon sm" type="button" (click)="remove(customer); $event.stopPropagation()" aria-label="ลบ">
+                  <lucide-icon name="trash-2" [size]="16"></lucide-icon>
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <app-empty-state title="ไม่พบลูกค้า" [text]="nearbyMode() ? 'ไม่มีลูกค้าในรัศมีนี้ ลองขยายรัศมี' : 'เพิ่มลูกค้าคนแรกพร้อมปักหมุดบ้าน'">
+              @if (!nearbyMode()) {
+                <button class="btn primary" type="button" (click)="openCreate()">
+                  <lucide-icon name="plus" [size]="18"></lucide-icon>
+                  เพิ่มลูกค้า
+                </button>
+              }
+            </app-empty-state>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="card map-pane" [class.hide-mobile]="mobileView() === 'list'">
+      <app-map
+        #map
+        class="map"
+        [markers]="markers()"
+        [shop]="shop()"
+        [circle]="circle()"
+        [pickable]="nearbyMode()"
+        (pick)="onMapPick($event)"
+      />
+    </div>
+  </section>
+</div>
+
+<app-modal [open]="formOpen()" [title]="editing() ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'" [wide]="true" (closed)="formOpen.set(false)">
+  <div class="form-grid">
+    <div class="stack">
+      <div class="grid cols-2 tight">
+        <div class="field">
+          <label for="fn">ชื่อ *</label>
+          <input id="fn" class="input" [(ngModel)]="form.firstName" placeholder="สมชาย" />
+        </div>
+        <div class="field">
+          <label for="ln">นามสกุล</label>
+          <input id="ln" class="input" [(ngModel)]="form.lastName" placeholder="ใจดี" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="ph">เบอร์โทร *</label>
+        <div class="input-icon">
+          <lucide-icon name="phone" [size]="17"></lucide-icon>
+          <input id="ph" class="input" [(ngModel)]="form.phone" inputmode="tel" placeholder="08x-xxx-xxxx" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="ad">ที่อยู่</label>
+        <textarea id="ad" class="input" [(ngModel)]="form.address" placeholder="บ้านเลขที่ หอพัก หรือจุดสังเกต"></textarea>
+      </div>
+      <div class="field">
+        <label for="nt">หมายเหตุ</label>
+        <input id="nt" class="input" [(ngModel)]="form.note" placeholder="เช่น โทรก่อนถึง" />
+      </div>
+    </div>
+
+    <div class="stack picker">
+      <div class="row between">
+        <label class="pick-label">ปักหมุดบ้านลูกค้า *</label>
+        <button class="btn ghost sm" type="button" (click)="useMyLocation()">
+          <lucide-icon name="locate-fixed" [size]="16"></lucide-icon>
+          ตำแหน่งปัจจุบัน
+        </button>
+      </div>
+      @if (formOpen()) {
+        <app-map class="picker-map" [shop]="shop()" [picked]="formLocation()" [pickable]="true" (pick)="setFormLocation($event)" />
+      }
+      <p class="hint row">
+        <lucide-icon name="map-pin" [size]="14"></lucide-icon>
+        @if (formLocation(); as loc) {
+          {{ loc.latitude }}, {{ loc.longitude }}
+        } @else {
+          แตะบนแผนที่ตรงตำแหน่งบ้านลูกค้า
+        }
+      </p>
+    </div>
+  </div>
+
+  @if (formError()) {
+    <div class="form-error">
+      <lucide-icon name="triangle-alert" [size]="18"></lucide-icon>
+      {{ formError() }}
+    </div>
+  }
+
+  <div modal-footer class="row footer-row">
+    <button class="btn outline" type="button" (click)="formOpen.set(false)">ยกเลิก</button>
+    <button class="btn primary" type="button" (click)="save()" [disabled]="saving()">
+      <lucide-icon [name]="saving() ? 'loader-circle' : 'check'" [size]="18" [class.spin]="saving()"></lucide-icon>
+      บันทึก
+    </button>
+  </div>
+</app-modal>

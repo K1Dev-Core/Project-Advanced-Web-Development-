@@ -1,0 +1,85 @@
+<div class="landing">
+  <header class="top">
+    <app-brand />
+    <div class="spacer"></div>
+    <a class="btn ghost desktop-only" routerLink="/rider">
+      <lucide-icon name="bike" [size]="18"></lucide-icon>
+      สำหรับไรเดอร์
+    </a>
+    <a class="btn primary" [routerLink]="auth.isLoggedIn() ? '/app/dashboard' : '/login'">
+      <lucide-icon name="store" [size]="18"></lucide-icon>
+      {{ auth.isLoggedIn() ? 'เข้าสู่หน้าร้าน' : 'เข้าสู่ระบบ' }}
+    </a>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <span class="eyebrow">
+        <lucide-icon name="sparkles" [size]="16"></lucide-icon>
+        ระบบจัดเส้นทางไรเดอร์อัจฉริยะ
+      </span>
+      <h1>ส่งข้าวกล่องให้ทัน<br /><em>มื้อเที่ยง</em> ทุกออเดอร์</h1>
+      <p>
+        กดปุ่มเดียวตอน 11:30 ระบบแบ่งงานให้ไรเดอร์ จัดลำดับจุดส่งที่สั้นที่สุด และบอกกำไรขาดทุนให้ก่อนออกรถ
+      </p>
+      <div class="role-cards">
+        <a class="role owner" [routerLink]="auth.isLoggedIn() ? '/app/dashboard' : '/login'">
+          <span class="role-icon"><lucide-icon name="store" [size]="24"></lucide-icon></span>
+          <span class="role-text">
+            <strong>ฉันเป็นเจ้าของร้าน</strong>
+            <span>จัดการลูกค้า ออเดอร์ และจัดเส้นทาง</span>
+          </span>
+          <lucide-icon name="arrow-right" [size]="20" class="go"></lucide-icon>
+        </a>
+        <a class="role rider" routerLink="/rider">
+          <span class="role-icon"><lucide-icon name="bike" [size]="24"></lucide-icon></span>
+          <span class="role-text">
+            <strong>ฉันเป็นไรเดอร์</strong>
+            <span>กรอกเลขใบงานเพื่อดูจุดส่งของวันนี้</span>
+          </span>
+          <lucide-icon name="arrow-right" [size]="20" class="go"></lucide-icon>
+        </a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="blob"></div>
+      <app-rider-illustration />
+      <div class="float-card one">
+        <lucide-icon name="circle-check" [size]="20"></lucide-icon>
+        <div><strong>ส่งถึงแล้ว</strong><span>11:42 · จุดที่ 2</span></div>
+      </div>
+      <div class="float-card two">
+        <lucide-icon name="wallet" [size]="20"></lucide-icon>
+        <div><strong>กำไรวันนี้</strong><span>฿675</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="highlights">
+    @for (item of highlights; track item.title) {
+      <div class="highlight card">
+        <span class="h-icon"><lucide-icon [name]="item.icon" [size]="22"></lucide-icon></span>
+        <h3>{{ item.title }}</h3>
+        <p class="muted">{{ item.text }}</p>
+      </div>
+    }
+  </section>
+
+  <section class="steps card">
+    <h2>ใช้งานง่ายใน 3 ขั้นตอน</h2>
+    <div class="step-list">
+      @for (step of steps; track step.title; let i = $index) {
+        <div class="step">
+          <span class="step-num">{{ i + 1 }}</span>
+          <span class="step-icon"><lucide-icon [name]="step.icon" [size]="22"></lucide-icon></span>
+          <strong>{{ step.title }}</strong>
+          <p class="muted">{{ step.text }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <footer class="foot muted small">
+    © ข้าวกล่องเดลิเวอรี · ส่งด่วนมื้อเที่ยง · กลุ่ม Khaokong
+  </footer>
+</div>

@@ -1,0 +1,224 @@
+<div class="planning">
+  <section class="map-area card">
+    <app-map class="map" [lines]="lines()" [markers]="markers()" [shop]="shop()" />
+    @if (plan(); as p) {
+      <div class="legend">
+        @for (route of p.routes; track route.sequence) {
+          <button type="button" class="legend-item" [class.active]="focusedRoute() === route.sequence" (click)="toggleRoute(route)">
+            <i class="dot" [style.background]="route.color"></i>
+            {{ route.sequence }}
+          </button>
+        }
+      </div>
+      <div class="map-badge">
+        <lucide-icon name="route" [size]="16"></lucide-icon>
+        {{ p.summary.distanceSource === 'road' ? 'ระยะทางถนนจริง' : 'ระยะทางโดยประมาณ' }}
+      </div>
+    }
+  </section>
+
+  <aside class="panel">
+    <div class="panel-head">
+      <div>
+        <h1>จัดเส้นทางส่ง</h1>
+        <p class="muted small">
+          รอจัดส่ง {{ pendingCount() }} ออเดอร์ · ออก {{ plan()?.departureTime ?? '11:30' }} ถึงก่อน {{ plan()?.deadlineTime ?? '12:30' }}
+        </p>
+      </div>
+      @if (plan(); as p) {
+        <span class="badge" [class]="labels.planStatus[p.status].tone">{{ labels.planStatus[p.status].text }}</span>
+      }
+    </div>
+
+    <div class="objectives">
+      @for (option of objectives(); track option.key) {
+        <button
+          type="button"
+          class="objective"
+          [class.active]="objective() === option.key"
+          [disabled]="working() !== null || (plan() !== null && !canEdit())"
+          (click)="chooseObjective(option.key)"
+        >
+          <lucide-icon [name]="labels.objectiveIcon[option.key]" [size]="18"></lucide-icon>
+          <span>{{ option.label }}</span>
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <div class="stack">
+        <div class="skeleton" style="height: 120px"></div>
+        <div class="skeleton" style="height: 80px"></div>
+        <div class="skeleton" style="height: 80px"></div>
+      </div>
+    } @else if (plan(); as p) {
+      <div class="summary" [class.loss]="!p.summary.isProfitable">
+        <div class="profit">
+          <span>กำไรสุทธิรอบนี้</span>
+          <strong class="mono">{{ p.summary.netProfit | baht }}</strong>
+          <small>
+            <lucide-icon [name]="p.summary.isProfitable ? 'trending-up' : 'trending-down'" [size]="14"></lucide-icon>
+            {{ p.summary.profitMarginPercent }}% ของยอดขาย
+          </small>
+        </div>
+        <div class="kpis">
+          <div><span>ไรเดอร์</span><strong>{{ p.summary.riderCount }} คน</strong></div>
+          <div><span>ระยะรวม</span><strong>{{ p.summary.totalDistanceKm | km }}</strong></div>
+          <div><span>ถึงจุดสุดท้าย</span><strong>{{ p.summary.latestArrivalTime }}</strong></div>
+        </div>
+      </div>
+
+      <div class="money">
+        <div class="money-row"><span>ยอดขาย ({{ p.summary.boxCount }} กล่อง)</span><strong class="mono">{{ p.summary.revenue | baht }}</strong></div>
+        <div class="money-row"><span>ต้นทุนอาหาร</span><strong class="mono neg">-{{ p.summary.foodCost | baht }}</strong></div>
+        <div class="money-row"><span>ค่าไรเดอร์รวม</span><strong class="mono neg">-{{ p.summary.totalRiderFee | baht }}</strong></div>
+        <div class="money-row total"><span>กำไรสุทธิ</span><strong class="mono">{{ p.summary.netProfit | baht }}</strong></div>
+      </div>
+
+      <div class="on-time" [class.late]="!p.summary.onTime">
+        <lucide-icon [name]="p.summary.onTime ? 'circle-check' : 'triangle-alert'" [size]="18"></lucide-icon>
+        @if (p.summary.onTime) {
+          ส่งทันทุกจุดก่อน {{ p.summary.deadlineTime }} · เฉลี่ยถึงใน {{ p.summary.averageArrivalMinutes | minutes }}
+        } @else {
+          มี {{ p.summary.lateStops }} จุดที่อาจส่งไม่ทัน {{ p.summary.deadlineTime }}
+        }
+      </div>
+
+      <div class="actions">
+        @if (p.status === 'draft') {
+          <button class="btn outline" type="button" (click)="recalculate()" [disabled]="working() !== null">
+            <lucide-icon name="refresh-cw" [size]="18" [class.spin]="working() === 'recalc'"></lucide-icon>
+            คำนวณใหม่
+          </button>
+          <button class="btn primary" type="button" (click)="confirmPlan()" [disabled]="working() !== null">
+            <lucide-icon [name]="working() === 'confirm' ? 'loader-circle' : 'circle-check'" [size]="18" [class.spin]="working() === 'confirm'"></lucide-icon>
+            ยืนยันแผน
+          </button>
+        } @else {
+          <button class="btn danger" type="button" (click)="cancelPlan()" [disabled]="working() !== null">
+            <lucide-icon name="circle-x" [size]="18"></lucide-icon>
+            ยกเลิกแผน
+          </button>
+          @if (pendingCount() > 0) {
+            <button class="btn soft" type="button" (click)="calculate()" [disabled]="working() !== null">
+              <lucide-icon name="plus" [size]="18"></lucide-icon>
+              จัดออเดอร์ใหม่ {{ pendingCount() }} รายการ
+            </button>
+          }
+        }
+      </div>
+
+      <h3 class="routes-title">
+        เส้นทางไรเดอร์ <span class="muted">({{ p.routes.length }})</span>
+      </h3>
+      <div class="routes">
+        @for (route of p.routes; track route.sequence) {
+          <article class="route" [class.focus]="focusedRoute() === route.sequence" [style.--route]="route.color">
+            <button type="button" class="route-head" (click)="toggleRoute(route)">
+              <span class="route-num" [style.background]="route.color">{{ route.sequence }}</span>
+              <span class="route-info">
+                <strong>ไรเดอร์ {{ route.sequence }} · สี{{ route.colorName }}</strong>
+                <span class="muted small">
+                  {{ route.orderCount }} จุด · {{ route.boxCount }} กล่อง · {{ route.distanceKm | km }} · เสร็จ {{ route.finishTime }}
+                </span>
+              </span>
+              <span class="route-fee">
+                <strong class="mono">{{ route.riderFee | baht }}</strong>
+                <span class="tiny muted">ค่าส่ง</span>
+              </span>
+              <lucide-icon [name]="expandedRoute() === route.sequence ? 'chevron-up' : 'chevron-down'" [size]="18" class="chev"></lucide-icon>
+            </button>
+
+            @if (expandedRoute() === route.sequence) {
+              <div class="route-body">
+                <ol class="stops">
+                  <li class="stop shop-stop">
+                    <span class="stop-dot"><lucide-icon name="store" [size]="13"></lucide-icon></span>
+                    <span class="stop-text"><strong>ร้าน</strong><span class="muted tiny">ออก {{ p.departureTime }}</span></span>
+                  </li>
+                  @for (stop of route.stops; track stop.sequence) {
+                    <li class="stop" [class.done]="stop.status === 'delivered'">
+                      <span class="stop-dot" [style.background]="route.color">{{ stop.sequence }}</span>
+                      <span class="stop-text">
+                        <strong>{{ stop.customerName }}</strong>
+                        <span class="muted tiny">{{ stop.boxes }} กล่อง · {{ stop.legDistanceKm | km }} · ถึง {{ stop.eta }}</span>
+                      </span>
+                      @if (stop.late) {
+                        <span class="badge red">ช้า</span>
+                      }
+                      @if (stop.status === 'delivered') {
+                        <span class="badge green">ส่งแล้ว</span>
+                      }
+                    </li>
+                  }
+                </ol>
+
+                <div class="route-money">
+                  <span>รายได้ {{ route.revenue | baht }}</span>
+                  <span>ต้นทุน {{ route.foodCost | baht }}</span>
+                  <span [class.pos]="route.profit >= 0" [class.neg]="route.profit < 0">กำไร {{ route.profit | baht }}</span>
+                </div>
+
+                @if (route.jobCode) {
+                  <div class="job">
+                    <div class="job-code">
+                      <span class="muted tiny">เลขใบงาน</span>
+                      <strong class="mono">{{ route.jobCode }}</strong>
+                    </div>
+                    <select class="input rider-select" [ngModel]="route.rider?.id ?? ''" (ngModelChange)="assignRider(route, $event)">
+                      <option value="">— เลือกไรเดอร์ —</option>
+                      @for (rider of riders(); track rider.id) {
+                        <option [value]="rider.id">{{ rider.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="row wrap job-actions">
+                    <button class="btn soft sm" type="button" (click)="copyJob(route)">
+                      <lucide-icon name="copy" [size]="16"></lucide-icon>
+                      คัดลอกลิงก์ใบงาน
+                    </button>
+                    @if (p.status !== 'draft') {
+                      <a class="btn outline sm" [routerLink]="['/rider', route.jobCode]" target="_blank">
+                        <lucide-icon name="smartphone" [size]="16"></lucide-icon>
+                        เปิดใบงาน
+                      </a>
+                    }
+                    <a class="btn ghost sm" [href]="route.navigationUrl" target="_blank" rel="noopener">
+                      <lucide-icon name="navigation" [size]="16"></lucide-icon>
+                      Google Maps
+                    </a>
+                  </div>
+                  @if (p.status === 'draft') {
+                    <p class="hint">ไรเดอร์จะเปิดใบงานได้หลังกด "ยืนยันแผน"</p>
+                  }
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
+    } @else if (pendingCount() > 0) {
+      <div class="start card">
+        <div class="start-art"><lucide-icon name="wand-sparkles" [size]="30"></lucide-icon></div>
+        <h3>พร้อมจัดเส้นทาง {{ pendingCount() }} ออเดอร์</h3>
+        <p class="muted small">เลือกเป้าหมายด้านบน แล้วกดปุ่มเดียว ระบบแบ่งงานไรเดอร์คนละไม่เกิน 3 ออเดอร์ และเลือกเส้นทางที่เหมาะที่สุดให้</p>
+        <button class="btn primary lg block" type="button" (click)="calculate()" [disabled]="working() !== null">
+          @if (working() === 'calc') {
+            <lucide-icon name="loader-circle" [size]="20" class="spin"></lucide-icon>
+            กำลังคำนวณเส้นทาง...
+          } @else {
+            <lucide-icon name="wand-sparkles" [size]="20"></lucide-icon>
+            คำนวณเส้นทาง
+          }
+        </button>
+      </div>
+    } @else {
+      <app-empty-state art="route" title="ยังไม่มีออเดอร์รอจัดส่ง" text="เพิ่มออเดอร์หรือจำลองออเดอร์ 20–30 รายการก่อน แล้วกลับมาจัดเส้นทาง">
+        <a class="btn primary" routerLink="/app/orders">
+          <lucide-icon name="shopping-bag" [size]="18"></lucide-icon>
+          ไปที่ออเดอร์
+        </a>
+      </app-empty-state>
+    }
+  </aside>
+</div>

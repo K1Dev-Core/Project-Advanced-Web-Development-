@@ -1,0 +1,139 @@
+.auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.panel {
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+}
+
+.art-panel {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.18), transparent 35%),
+    linear-gradient(150deg, #ff7a3d 0%, #ff5a1f 55%, #d9440d 100%);
+  color: #fff;
+  justify-content: space-between;
+}
+
+.art {
+  width: min(360px, 70%);
+  margin: 0 auto;
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 40px;
+  box-shadow: 0 30px 60px rgba(120, 40, 0, 0.25);
+}
+
+.art-text h2 {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.art-text p {
+  margin-top: 8px;
+  opacity: 0.9;
+  max-width: 420px;
+}
+
+.form-panel {
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  position: relative;
+}
+
+.back {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.form {
+  width: min(400px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form h1 {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.mobile-brand {
+  display: none;
+}
+
+.pw .input {
+  padding-right: 44px;
+}
+
+.eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--red-50);
+  color: var(--red);
+  font-size: 14px;
+}
+
+.rider-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--green);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .auth {
+    grid-template-columns: 1fr;
+  }
+
+  .art-panel {
+    display: none;
+  }
+
+  .form-panel {
+    padding: 80px 20px 32px;
+    justify-content: flex-start;
+    background: var(--bg);
+  }
+
+  .back {
+    top: 22px;
+    left: 18px;
+  }
+
+  .mobile-brand {
+    display: block;
+    margin-bottom: 4px;
+  }
+}

@@ -1,0 +1,146 @@
+<div class="sheet-page">
+  <header class="bar" [style.--route]="job()?.color ?? '#ff5a1f'">
+    <a routerLink="/rider" class="back" aria-label="กลับ"><lucide-icon name="chevron-left" [size]="22"></lucide-icon></a>
+    <div class="bar-title">
+      <span>ใบงาน</span>
+      <strong class="mono">{{ job()?.jobCode ?? code() }}</strong>
+    </div>
+    <button class="back" type="button" (click)="load()" aria-label="รีเฟรช">
+      <lucide-icon name="refresh-cw" [size]="20" [class.spin]="loading()"></lucide-icon>
+    </button>
+  </header>
+
+  <main class="content">
+    @if (loading() && !job()) {
+      <div class="skeleton" style="height: 180px"></div>
+      <div class="skeleton" style="height: 220px"></div>
+      <div class="skeleton" style="height: 120px"></div>
+    } @else if (error(); as err) {
+      <div class="card problem">
+        <app-food-box-illustration class="problem-art" />
+        <h2>{{ err.code === 'JOB_NOT_AVAILABLE' ? 'ใบงานยังไม่พร้อม' : 'เปิดใบงานไม่ได้' }}</h2>
+        <p class="muted">
+          {{ err.code === 'JOB_NOT_AVAILABLE' ? 'ร้านยังไม่ได้ยืนยันแผน หรือยกเลิกใบงานนี้แล้ว ลองติดต่อร้านอีกครั้ง' : err.message }}
+        </p>
+        <div class="row wrap">
+          <button class="btn outline" type="button" (click)="load()">
+            <lucide-icon name="refresh-cw" [size]="18"></lucide-icon>
+            ลองใหม่
+          </button>
+          <a class="btn primary" routerLink="/rider">กรอกเลขใบงานใหม่</a>
+        </div>
+      </div>
+    } @else if (job(); as j) {
+      <section class="hero" [style.--route]="j.color">
+        <div class="hero-top">
+          <span class="rider-chip"><i class="dot" [style.background]="j.color"></i>ไรเดอร์ {{ j.riderNumber }} · สี{{ j.colorName }}</span>
+          @if (j.rider) {
+            <span class="who">{{ j.rider.name }}</span>
+          }
+        </div>
+        <div class="pickup">
+          <div class="box-count">
+            <strong class="mono">{{ j.totalBoxes }}</strong>
+            <span>กล่อง</span>
+          </div>
+          <div class="pickup-text">
+            <span>หยิบข้าวกล่องทั้งหมด</span>
+            <strong>{{ j.totalOrders }} ออเดอร์ · {{ j.distanceKm | km }}</strong>
+            <span class="time-line">
+              <lucide-icon name="clock" [size]="15"></lucide-icon>
+              ออก {{ j.departureTime }} · ส่งครบก่อน {{ j.deadlineTime }}
+            </span>
+          </div>
+        </div>
+        <div class="progress">
+          <div class="progress-bar"><span [style.width.%]="progress()"></span></div>
+          <span class="tiny">ส่งแล้ว {{ j.deliveredStops }}/{{ j.stops.length }} จุด</span>
+        </div>
+      </section>
+
+      @if (j.status === 'completed') {
+        <section class="card done">
+          <lucide-icon name="party-popper" [size]="30"></lucide-icon>
+          <div>
+            <h3>ส่งครบทุกจุดแล้ว!</h3>
+            <p class="muted small">ค่าส่งรอบนี้ {{ j.riderFee | baht }} ขอบคุณที่ส่งทันมื้อเที่ยง</p>
+          </div>
+        </section>
+      } @else {
+        <section class="row actions">
+          @if (j.status === 'pending') {
+            <button class="btn primary lg" type="button" (click)="start()" [disabled]="starting()">
+              <lucide-icon [name]="starting() ? 'loader-circle' : 'play'" [size]="20" [class.spin]="starting()"></lucide-icon>
+              เริ่มออกส่ง
+            </button>
+          }
+          <a class="btn outline lg" [href]="j.navigationUrl" target="_blank" rel="noopener">
+            <lucide-icon name="navigation" [size]="20"></lucide-icon>
+            นำทางทั้งเส้น
+          </a>
+        </section>
+      }
+
+      <section class="card map-card">
+        <app-map class="map" [lines]="lines()" [markers]="markers()" [shop]="j.shop.location" />
+      </section>
+
+      <section class="timeline">
+        <div class="t-item shop">
+          <span class="t-dot"><lucide-icon name="store" [size]="16"></lucide-icon></span>
+          <div class="t-card">
+            <strong>รับของที่ร้าน</strong>
+            <span class="muted small">{{ j.shop.name }} · ออก {{ j.departureTime }}</span>
+          </div>
+        </div>
+
+        @for (stop of j.stops; track stop.id) {
+          <div class="t-item" [class.done]="stop.status === 'delivered'" [class.next]="nextStop()?.id === stop.id" [style.--route]="j.color">
+            <span class="t-dot">
+              @if (stop.status === 'delivered') {
+                <lucide-icon name="check" [size]="16"></lucide-icon>
+              } @else {
+                {{ stop.sequence }}
+              }
+            </span>
+            <article class="t-card">
+              <div class="row between">
+                <span class="stop-label">{{ stop.label }}</span>
+                <span class="eta" [class.late]="stop.late"><lucide-icon name="clock" [size]="14"></lucide-icon>{{ stop.eta }}</span>
+              </div>
+              <h3>ส่งบ้านคุณ{{ stop.customerName }}</h3>
+              <div class="stop-meta">
+                <span class="boxes"><lucide-icon name="package" [size]="15"></lucide-icon>{{ stop.boxes }} กล่อง</span>
+                <span><lucide-icon name="route" [size]="15"></lucide-icon>{{ stop.legDistanceKm | km }}</span>
+              </div>
+              @if (stop.address) {
+                <p class="addr muted small">{{ stop.address }}</p>
+              }
+              <div class="stop-actions">
+                <a class="btn outline sm" [href]="stop.mapUrl" target="_blank" rel="noopener">
+                  <lucide-icon name="navigation" [size]="16"></lucide-icon>
+                  นำทาง
+                </a>
+                <a class="btn outline sm" [href]="stop.callUrl">
+                  <lucide-icon name="phone" [size]="16"></lucide-icon>
+                  โทร
+                </a>
+                @if (stop.status === 'delivered') {
+                  <button class="btn ghost sm" type="button" (click)="undo(stop)" [disabled]="busyStop() === stop.id">
+                    <lucide-icon name="undo-2" [size]="16"></lucide-icon>
+                    ยกเลิก
+                  </button>
+                } @else {
+                  <button class="btn success sm deliver" type="button" (click)="deliver(stop)" [disabled]="busyStop() === stop.id">
+                    <lucide-icon [name]="busyStop() === stop.id ? 'loader-circle' : 'circle-check'" [size]="16" [class.spin]="busyStop() === stop.id"></lucide-icon>
+                    ส่งแล้ว
+                  </button>
+                }
+              </div>
+            </article>
+          </div>
+        }
+      </section>
+    }
+  </main>
+</div>
