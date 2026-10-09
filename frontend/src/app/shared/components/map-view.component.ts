@@ -49,7 +49,7 @@ export interface MapCircle {
 })
 export class MapViewComponent implements AfterViewInit, OnDestroy {
   private static readonly DEFAULT_CENTER: GeoPoint = { latitude: 16.246825, longitude: 103.252021 };
-  private static readonly TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  private static readonly TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   readonly markers = input<MapMarker[]>([]);
   readonly lines = input<MapLine[]>([]);
@@ -91,8 +91,7 @@ export class MapViewComponent implements AfterViewInit, OnDestroy {
 
     L.tileLayer(MapViewComponent.TILE_URL, {
       maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
     }).addTo(this.map);
 
     this.layer.addTo(this.map);
