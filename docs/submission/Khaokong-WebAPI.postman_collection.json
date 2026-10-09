@@ -1,0 +1,1263 @@
+{
+  "info": {
+    "name": "Khaokong Web API",
+    "description": "ระบบจัดเส้นทางและแบ่งงานไรเดอร์อัจฉริยะ (กลุ่ม Khaokong) เรียก 'เข้าสู่ระบบเจ้าของร้าน' ก่อน token จะถูกเก็บให้อัตโนมัติ ค่า id ในแต่ละ request เป็นตัวอย่าง ให้เปลี่ยนเป็น id ที่มีอยู่จริง",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://khaokong-apii.vercel.app"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "ownerUsername",
+      "value": "owner"
+    },
+    {
+      "key": "ownerPassword",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "ระบบและการยืนยันตัวตน",
+      "item": [
+        {
+          "name": "ข้อมูล API และรายการ endpoint",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api",
+            "description": "แสดงชื่อระบบ เวอร์ชัน และรายการ endpoint ทั้งหมดที่เปิดให้ใช้งาน"
+          }
+        },
+        {
+          "name": "ตรวจสอบสถานะระบบ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/health",
+            "description": "ตรวจว่าเซิร์ฟเวอร์และฐานข้อมูลทำงานปกติ ใช้ทดสอบหลัง deploy (ได้ 503 ถ้าต่อฐานข้อมูลไม่ได้)"
+          }
+        },
+        {
+          "name": "เข้าสู่ระบบเจ้าของร้าน",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "ส่งชื่อผู้ใช้และรหัสผ่าน ได้ JWT token กลับมา นำไปใส่ header Authorization: Bearer &lt;token&gt; ในทุก endpoint ที่ต้องล็อกอิน",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ownerUsername}}\",\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.token) { pm.collectionVariables.set('token', body.data.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ตรวจสอบ token ปัจจุบัน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "ใช้ตรวจว่า token ยังใช้ได้ และดูข้อมูลผู้ใช้ที่ล็อกอินอยู่"
+          }
+        },
+        {
+          "name": "ตัวอย่าง: เรียกโดยไม่ล็อกอิน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers",
+            "description": "ถ้าเรียก endpoint ที่ต้องล็อกอินโดยไม่ส่ง token จะได้ HTTP 401"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ตั้งค่าร้าน (Settings)",
+      "item": [
+        {
+          "name": "ดูค่าตั้งร้าน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/settings",
+            "description": "ราคาขาย ต้นทุน ค่าไรเดอร์ ความเร็ว เวลาออกส่ง ข้อจำกัดจำนวนออเดอร์/กล่อง และพิกัดร้าน"
+          }
+        },
+        {
+          "name": "แก้ไขค่าตั้งร้าน",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/settings",
+            "description": "ส่งเฉพาะฟิลด์ที่ต้องการแก้ (PUT หรือ PATCH ก็ได้)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"departureTime\": \"11:30\",\n  \"serviceMinutesPerStop\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ลูกค้า (Customers)",
+      "item": [
+        {
+          "name": "แสดงข้อมูลลูกค้าทุกคน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers?page=1&limit=2",
+            "description": "แสดงรายชื่อลูกค้าแบบแบ่งหน้า ใน meta มีจำนวนทั้งหมด"
+          }
+        },
+        {
+          "name": "ค้นหาลูกค้าจากส่วนหนึ่งของชื่อ/นามสกุล",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers?search=%E0%B8%AA%E0%B8%A1&limit=2",
+            "description": "ค้นแบบบางส่วน (partial match) จากชื่อ นามสกุล ชื่อเต็ม เบอร์โทร หรือที่อยู่"
+          }
+        },
+        {
+          "name": "ค้นหาแยกชื่อและนามสกุล",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers?firstName=%E0%B8%AA%E0%B8%A1%E0%B8%A8%E0%B8%B1%E0%B8%81%E0%B8%94%E0%B8%B4%E0%B9%8C&lastName=%E0%B9%83%E0%B8%88",
+            "description": "ระบุชื่อและ/หรือนามสกุลบางส่วนแยกกัน"
+          }
+        },
+        {
+          "name": "ค้นลูกค้าทั้งหมดในระยะ 1 กิโลเมตรจากพิกัด",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers/nearby?lat=16.246825&lng=103.252021&radius=1",
+            "description": "คำนวณระยะด้วยสูตร Haversine ในฐานข้อมูล เรียงจากใกล้ไปไกล พร้อม distanceKm"
+          }
+        },
+        {
+          "name": "ดูข้อมูลลูกค้า 1 คน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers/31",
+            "description": "ค้นด้วยรหัสลูกค้า"
+          }
+        },
+        {
+          "name": "ดูออเดอร์ของลูกค้า",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers/31/orders",
+            "description": "ออเดอร์ทั้งหมดของลูกค้าคนนี้ ใช้ query เดียวกับ GET /api/orders ได้"
+          }
+        },
+        {
+          "name": "เพิ่มลูกค้า",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers",
+            "description": "สร้างลูกค้าใหม่พร้อมพิกัดบ้าน (ส่ง latitude/longitude แบบไม่ซ้อนใน location ก็ได้)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"สมศักดิ์\",\n  \"lastName\": \"ใจงาม\",\n  \"phone\": \"0812345678\",\n  \"address\": \"หอพักนิสิต มมส ต.ขามเรียง อ.กันทรวิชัย จ.มหาสารคาม\",\n  \"location\": {\n    \"latitude\": 16.2521,\n    \"longitude\": 103.2489\n  },\n  \"note\": \"ฝากไว้ที่ป้อมยาม\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "แก้ไขข้อมูลลูกค้า",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers/31",
+            "description": "ส่งเฉพาะฟิลด์ที่ต้องการแก้ (PUT หรือ PATCH)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0899999999\",\n  \"note\": \"โทรก่อนถึง\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ลบลูกค้า",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers/31",
+            "description": "ถ้าลูกค้ายังมีออเดอร์ ต้องส่ง ?force=true เพื่อลบพร้อมออเดอร์ ส่วนลูกค้าที่มีออเดอร์อยู่ในแผนที่ยืนยันแล้วจะลบไม่ได้ (409)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "รายการสั่งซื้อ (Orders)",
+      "item": [
+        {
+          "name": "แสดงรายการสั่งซื้อพร้อมข้อมูลลูกค้า",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders?limit=2",
+            "description": "ทุกออเดอร์มีข้อมูลลูกค้าที่สั่ง (customer) และจำนวนกล่อง (boxes)"
+          }
+        },
+        {
+          "name": "ดูออเดอร์ 1 รายการ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28",
+            "description": "ค้นด้วยรหัสออเดอร์"
+          }
+        },
+        {
+          "name": "เพิ่มออเดอร์",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "description": "จำนวนกล่อง 1–3 ต่อออเดอร์ ราคาต่อกล่องดึงจากค่าตั้งร้าน ถ้าไม่ระบุวันส่งจะเป็นวันนี้",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 31,\n  \"boxes\": 2,\n  \"note\": \"ไม่ใส่ผัก\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "แก้ไขออเดอร์",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28",
+            "description": "แก้จำนวนกล่อง ลูกค้า วันส่ง หมายเหตุ หรือสถานะ (pending / cancelled / delivered)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxes\": 3,\n  \"note\": \"เพิ่มน้ำจิ้ม\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "แก้ไขจำนวนกล่อง (กำหนดค่าใหม่)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28/boxes",
+            "description": "กำหนดจำนวนกล่องใหม่โดยตรง",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxes\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "เพิ่ม/ลดจำนวนกล่อง",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28/boxes",
+            "description": "เพิ่มหรือลดจากค่าเดิม เช่น +1 หรือ -1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"change\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ตัวอย่าง: จำนวนกล่องเกินกำหนด",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28/boxes",
+            "description": "ถ้าจำนวนกล่องเกิน 3 (ค่า maxBoxesPerOrder) จะได้ HTTP 422",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxes\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ตัวอย่าง: แก้ออเดอร์ที่อยู่ในแผนยืนยันแล้ว",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28",
+            "description": "ออเดอร์ที่ถูกยืนยันเข้าแผนแล้ว (assigned) แก้จำนวนกล่องไม่ได้ ต้องยกเลิกแผนก่อน (409)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxes\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "สรุปออเดอร์ของวัน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/summary",
+            "description": "จำนวนออเดอร์ กล่อง และยอดขาย แยกตามสถานะ"
+          }
+        },
+        {
+          "name": "แสดงรายการสั่งซื้อทั้งหมดในระยะ 2 กิโลเมตรจากพิกัด",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/nearby?lat=16.246825&lng=103.252021&radius=2",
+            "description": "ออเดอร์ที่บ้านลูกค้าอยู่ในรัศมีที่กำหนด เรียงจากใกล้ไปไกล"
+          }
+        },
+        {
+          "name": "ลบออเดอร์",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/28",
+            "description": "ลบออเดอร์ 1 รายการ (ออเดอร์ที่อยู่ในแผนยืนยันแล้วลบไม่ได้)"
+          }
+        },
+        {
+          "name": "ลบออเดอร์หลายรายการตามเงื่อนไข",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "description": "ไม่ระบุเงื่อนไข = ลบออเดอร์และแผนทั้งหมด แผนที่มีออเดอร์ที่ถูกลบจะถูกลบด้วย และออเดอร์อื่นในแผนนั้นกลับเป็น pending"
+          }
+        }
+      ]
+    },
+    {
+      "name": "จำลองข้อมูล (Simulations)",
+      "item": [
+        {
+          "name": "จำลองรายการสั่งซื้อ 20-30 รายการ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/simulations/orders",
+            "description": "สุ่มออเดอร์ 20–30 รายการ (ออเดอร์ละ 1–3 กล่อง) จากลูกค้าในระบบ ถ้าลูกค้าไม่พอจะสร้างลูกค้าจำลองรอบร้านในรัศมี 3 กม. ให้ ทุกรายการมี simulated: true",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minCount\": 20,\n  \"maxCount\": 30,\n  \"clearExisting\": true,\n  \"seed\": 31\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ล้าง (ลบทั้งหมด) รายการสั่งซื้อที่จำลอง",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/simulations/orders",
+            "description": "ลบเฉพาะออเดอร์ที่จำลองขึ้น ออเดอร์จริงไม่ถูกลบ แผนที่มีออเดอร์จำลองจะถูกลบ และออเดอร์จริงในแผนนั้นกลับเป็น pending"
+          }
+        },
+        {
+          "name": "จำลองลูกค้า",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/simulations/customers",
+            "description": "สร้างลูกค้าสุ่มกระจายรอบร้าน",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 30,\n  \"radiusKm\": 3,\n  \"seed\": 21\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ล้างข้อมูลจำลองทั้งหมด",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/simulations/customers",
+            "description": "ลบออเดอร์จำลอง และลูกค้าจำลองที่ไม่มีออเดอร์จริงค้างอยู่"
+          }
+        },
+        {
+          "name": "จำลองไรเดอร์",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/simulations/riders",
+            "description": "สร้างรายชื่อไรเดอร์สุ่ม",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 10,\n  \"seed\": 11\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "รีเซ็ตทั้งระบบ",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/simulations?includeRiders=true",
+            "description": "ลบแผน ออเดอร์ และลูกค้าทั้งหมด (ทั้งจริงและจำลอง)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ไรเดอร์ (Riders)",
+      "item": [
+        {
+          "name": "รายชื่อไรเดอร์",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/riders?limit=2",
+            "description": "แสดงไรเดอร์แบบแบ่งหน้า"
+          }
+        },
+        {
+          "name": "ดูไรเดอร์ 1 คน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/riders/11",
+            "description": "ค้นด้วยรหัสไรเดอร์"
+          }
+        },
+        {
+          "name": "เพิ่มไรเดอร์",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/riders",
+            "description": "เพิ่มไรเดอร์ใหม่",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ประยุทธ ขับดี\",\n  \"phone\": \"0861112222\",\n  \"vehiclePlate\": \"1กข 1234 มหาสารคาม\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "แก้ไขไรเดอร์",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/riders/11",
+            "description": "ส่งเฉพาะฟิลด์ที่ต้องการแก้",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0863334444\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ลบไรเดอร์",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/riders/11",
+            "description": "ลบไรเดอร์ (เส้นทางที่เคยผูกไว้จะไม่มีไรเดอร์)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "แผนจัดส่งและจัดเส้นทาง (Plans)",
+      "item": [
+        {
+          "name": "เป้าหมายการคำนวณที่เลือกได้",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/objectives",
+            "description": "cost = ค่าส่งถูกสุด, distance = ระยะรวมสั้นสุด, time = ถึงมือลูกค้าเร็วสุด, balanced = สมดุล"
+          }
+        },
+        {
+          "name": "คำนวณเส้นทาง (ดูตัวเลือกก่อนบันทึก)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/preview",
+            "description": "ใช้ออเดอร์ pending ของวันนั้นทั้งหมด คำนวณเส้นทางด้วยระยะถนนจริง (OSRM) ไรเดอร์คนละไม่เกิน 3 ออเดอร์ ส่งถึงภายใน 11:30–12:30 แล้วเสนอหลายแบบพร้อมค่าส่ง กำไร และเวลา",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objective\": \"cost\",\n  \"alternatives\": 3,\n  \"seed\": 7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "คำนวณและบันทึกแผนจัดส่ง",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans",
+            "description": "บันทึกเป็นแผนร่าง (draft) แต่ละเส้นทางมีสี เลขใบงาน จุดส่งตามลำดับ ETA ลิงก์ Google Maps พิกัด path/geometry สำหรับวาดเส้นบนแผนที่ ค่าส่ง และกำไร",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objective\": \"cost\",\n  \"seed\": 7\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "คำนวณใหม่และเสนอเส้นทางแบบอื่น",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/1/recalculate",
+            "description": "ใช้กับแผนร่างเท่านั้น ระบบจำเส้นทางที่เคยเสนอแล้วและหาแบบใหม่ที่ไม่ซ้ำให้ทุกครั้ง meta.exhaustedAlternatives เป็น true เมื่อไม่มีแบบใหม่แล้ว",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ผูกไรเดอร์กับเส้นทาง",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/1/routes/13/rider",
+            "description": "ระบุไรเดอร์ให้เส้นทาง (ส่ง null เพื่อยกเลิก)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderId\": 11\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ยืนยันแผนจัดส่ง",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/1/confirm",
+            "description": "ออเดอร์ในแผนเปลี่ยนเป็น assigned ใบงานเปิดให้ไรเดอร์ดูได้ แผนร่างอื่นของวันเดียวกันจะถูกยกเลิก ถ้ามีการแก้ออเดอร์หลังคำนวณจะได้ 409 PLAN_STALE"
+          }
+        },
+        {
+          "name": "รายการแผนจัดส่ง",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans?limit=2",
+            "description": "แสดงหัวแผนและสรุป"
+          }
+        },
+        {
+          "name": "แผนล่าสุดของวัน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/latest",
+            "description": "ใช้แผนที่ยืนยันแล้วก่อน ถ้าไม่มีจึงใช้แผนร่าง"
+          }
+        },
+        {
+          "name": "รายละเอียดแผน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/1",
+            "description": "สรุปค่าใช้จ่าย กำไร/ขาดทุน เวลา และทุกเส้นทางพร้อมจุดส่ง"
+          }
+        },
+        {
+          "name": "ยกเลิกแผน",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/1/cancel",
+            "description": "ออเดอร์ที่ยังไม่ได้ส่งกลับเป็น pending เพื่อคำนวณใหม่ได้"
+          }
+        },
+        {
+          "name": "ลบแผน",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/plans/1",
+            "description": "ลบแผนร่างหรือแผนที่ยกเลิกแล้ว (แผนที่ยืนยันอยู่ต้องยกเลิกก่อน)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ใบงานไรเดอร์ (Jobs) — ไม่ต้องล็อกอิน",
+      "item": [
+        {
+          "name": "เปิดใบงานด้วยเลขใบงาน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/jobs/WV2F5Z",
+            "description": "สรุปจำนวนกล่องที่ต้องหยิบ ลำดับจุดส่ง (จุดที่ 1 → จุดที่ 2) เวลาถึงโดยประมาณ ลิงก์แผนที่ของแต่ละจุดและทั้งเส้นทาง และลิงก์โทรหาลูกค้า เปิดได้เฉพาะแผนที่ยืนยันแล้ว"
+          }
+        },
+        {
+          "name": "เริ่มออกส่ง",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/jobs/WV2F5Z/start",
+            "description": "เปลี่ยนสถานะใบงานเป็น in_progress"
+          }
+        },
+        {
+          "name": "ยืนยันส่งสำเร็จทีละจุด",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/jobs/WV2F5Z/stops/29/deliver",
+            "description": "ออเดอร์เปลี่ยนเป็น delivered ส่งครบทุกจุดแล้วใบงานเป็น completed และเมื่อทุกใบงานเสร็จ แผนจะเป็น completed"
+          }
+        },
+        {
+          "name": "ยกเลิกการยืนยันส่ง",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/jobs/WV2F5Z/stops/29/undo",
+            "description": "กรณีกดผิด"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ภาพรวม (Dashboard)",
+      "item": [
+        {
+          "name": "ภาพรวมประจำวัน",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/dashboard",
+            "description": "จำนวนลูกค้า ไรเดอร์ สรุปออเดอร์ และแผนล่าสุดของวัน"
+          }
+        }
+      ]
+    },
+    {
+      "name": "รูปแบบข้อผิดพลาด",
+      "item": [
+        {
+          "name": "ข้อมูลไม่ถูกต้อง (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/customers",
+            "description": "ทุก error มีรูปแบบเดียวกัน { error: { code, message, details } }",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"\",\n  \"phone\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "ไม่พบข้อมูล (404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/99999",
+            "description": "ค้นรหัสที่ไม่มีอยู่"
+          }
+        }
+      ]
+    }
+  ]
+}

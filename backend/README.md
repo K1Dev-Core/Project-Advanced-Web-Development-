@@ -2,6 +2,8 @@
 
 ระบบจัดเส้นทางและแบ่งงานไรเดอร์อัจฉริยะ (ส่งด่วนมื้อเที่ยง): Node.js, TypeScript, Express 5, MySQL พร้อม deploy ขึ้น Vercel
 
+**Production:** https://khaokong-apii.vercel.app/api · เอกสารส่งงานอยู่ใน `docs/submission/`
+
 ## โครงสร้างโปรเจกต์
 
 ```
