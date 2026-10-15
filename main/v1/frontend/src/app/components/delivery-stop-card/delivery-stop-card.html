@@ -1,0 +1,33 @@
+<article class="step-card">
+  <div class="step-heading">
+    <div>
+      <small>จุดส่ง {{ stop().sequence }}</small>
+      <h3>{{ stop().customerName }}</h3>
+    </div>
+    <delivery-status [value]="stop().status" />
+  </div>
+  <p class="step-address">{{ stop().address }}</p>
+  <div class="step-details">
+    <span class="box-count"><ui-icon name="box" /><strong>{{ stop().boxes }}</strong> กล่อง</span>
+    <span class="planned-time">ถึงตามแผน {{ stop().eta }}</span>
+  </div>
+  <div class="actions">
+    <a class="button" [href]="stop().mapUrl" target="_blank" rel="noopener"
+      ><ui-icon name="pin" />นำทาง</a
+    >
+    @if (stop().phone) {
+      <a class="button" [href]="'tel:' + stop().phone"><ui-icon name="phone" />โทรหาผู้รับ</a>
+    }
+    @if (stop().status !== 'delivered') {
+      <button
+        class="primary"
+        (click)="stopAction.emit('deliver')"
+        [disabled]="busy() || jobStatus() !== 'in_progress'"
+      >
+        <ui-icon name="check" />ส่งสำเร็จ
+      </button>
+    } @else {
+      <button (click)="stopAction.emit('undo')" [disabled]="busy()">ย้อนสถานะ</button>
+    }
+  </div>
+</article>

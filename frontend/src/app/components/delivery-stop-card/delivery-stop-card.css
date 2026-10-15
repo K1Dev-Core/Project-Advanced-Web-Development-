@@ -1,0 +1,68 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+.step-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  background: #fff;
+}
+:host(.completed) .step-card {
+  border-color: #cfe5d4;
+  background: #fcfffc;
+}
+.step-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.step-heading small {
+  color: #8a350b;
+  font-weight: 600;
+}
+.step-heading h3 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.step-address {
+  margin: 10px 0;
+  font-size: 13px;
+}
+.step-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+  color: #626871;
+  font-size: 13px;
+}
+.box-count {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid #f0d1bf;
+  border-radius: 6px;
+  background: #fff5ef;
+  color: #8a350b;
+}
+.box-count strong {
+  font-size: 18px;
+}
+.planned-time {
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .step-card {
+    padding: 14px;
+  }
+  .step-heading {
+    flex-wrap: wrap;
+  }
+}

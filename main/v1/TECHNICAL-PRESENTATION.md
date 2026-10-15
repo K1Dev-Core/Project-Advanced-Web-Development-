@@ -413,9 +413,9 @@ E2E frontend ต้องมี Playwright browser dependencies และ config
 |---|---|---|
 | Route และสิทธิ์หน้า | [`frontend/src/app/app.routes.ts`](../../frontend/src/app/app.routes.ts) | mapping URL, lazy page, owner guard |
 | request จาก browser | [`frontend/src/app/services/api.ts`](../../frontend/src/app/services/api.ts) | `request()`, token, error handling |
-| หน้ารายการ/แผน/ไรเดอร์ | [`records.ts`](../../frontend/src/app/pages/records.ts), [`plans.ts`](../../frontend/src/app/pages/plans.ts), [`rider.ts`](../../frontend/src/app/pages/rider.ts) | state และการเรียก API |
-| map และเลขจุด | [`frontend/src/app/components/parcel-map.ts`](../../frontend/src/app/components/parcel-map.ts) | Leaflet, marker, route sequence |
-| ใบงานที่ไรเดอร์เห็น | [`rider.html`](../../frontend/src/app/pages/rider.html), [`rider.css`](../../frontend/src/app/pages/rider.css) | จำนวนกล่อง progress และ step card |
+| หน้ารายการ/แผน/ไรเดอร์ | [`records.ts`](../../frontend/src/app/pages/records/records.ts), [`plans.ts`](../../frontend/src/app/pages/plans/plans.ts), [`rider.ts`](../../frontend/src/app/pages/rider/rider.ts) | state และการเรียก API |
+| map และเลขจุด | [`parcel-map.ts`](../../frontend/src/app/components/map/parcel-map.ts) | Leaflet, marker, route sequence |
+| ใบงานที่ไรเดอร์เห็น | [`rider.html`](../../frontend/src/app/pages/rider/rider.html), [`rider.css`](../../frontend/src/app/pages/rider/rider.css), [`delivery-stop-card.ts`](../../frontend/src/app/components/delivery-stop-card/delivery-stop-card.ts) | จำนวนกล่อง progress, parent-child input/output และ step card |
 | เส้นทาง request API | [`App.ts`](../../backend/src/app/App.ts), [`Container.ts`](../../backend/src/app/Container.ts) | middleware, auth, wiring controllers/services |
 | ตัวอย่าง endpoint แผน | [`PlanController.ts`](../../backend/src/modules/plans/PlanController.ts) | preview/create/recalculate/confirm |
 | กฎแผนและ transaction | [`PlanService.ts`](../../backend/src/modules/plans/PlanService.ts) | preview, draft, stale-check, confirm |

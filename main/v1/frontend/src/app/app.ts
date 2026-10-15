@@ -3,7 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Notice } from './shared/notice';
 import { DevTools } from './shared/dev-tools';
-import { Icon } from './components/icon';
+import { Icon } from './components/ui/icon';
 import { Api } from './services/api';
 @Component({
   selector: 'app-root',

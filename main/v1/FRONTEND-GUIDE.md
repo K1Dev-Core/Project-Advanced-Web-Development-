@@ -28,12 +28,28 @@ frontend/
         ├── app.routes.ts        # URL, lazy loading และ owner route guard
         ├── styles.css           # design tokens, layout, responsive และพื้นหลัง
         ├── material.scss        # ธีม Angular Material
-        ├── components/          # UI component ที่นำกลับมาใช้ซ้ำ
-        ├── pages/               # page component และ template
+        ├── components/
+        │   ├── ui/              # icon, page title, status, request state
+        │   ├── map/             # Leaflet map component
+        │   └── delivery-stop-card/ # บัตรขั้นตอนส่งที่รับข้อมูลจาก page
+        ├── pages/               # หน้าหนึ่งโฟลเดอร์ต่อหนึ่ง workflow
+        │   ├── home/            # home.ts + home.html
+        │   ├── login/           # login.ts + login.html
+        │   ├── overview/        # overview.ts + overview.html
+        │   ├── records/         # records.ts + records.html + record-fields.ts
+        │   ├── plans/           # plans.ts + plans.html
+        │   ├── rider/           # rider.ts + rider.html + rider.css
+        │   └── settings/        # settings.ts + settings.html
         ├── services/            # การติดต่อ API
         ├── models/              # รูปแบบข้อมูล TypeScript
         └── shared/              # controls, dialog, state helper และ UI ย่อย
 ```
+
+### ทำไมจัดแบบนี้
+
+การจัดนี้นำหลักจากบทเรียนใน `Angular (2).zip` มาใช้: แยก page/component เป็นไฟล์ TypeScript กับ template, สร้าง component ไว้ในโฟลเดอร์ตามหน้าที่, ใช้ Router เลือกหน้า, ส่งข้อมูล parent → child ผ่าน input และส่ง action กลับด้วย output, เก็บ API ใน service และ response types ไว้ใน models แทนการเขียนทั้งหมดใน app component เดียว
+
+โค้ดใช้ Angular standalone components ตาม Angular รุ่นที่ติดตั้งในโปรเจกต์ จึงไม่ต้องสร้าง NgModule แบบตัวอย่างเก่าบางบทเรียน แต่แนวคิดการ import component และเรียก selector ใน template ยังเหมือนเดิม
 
 ### จุดเริ่มต้นและการตั้งค่า
 
@@ -70,25 +86,26 @@ frontend/
 
 page component แต่ละตัวแยก TypeScript สำหรับ state/เหตุการณ์ ออกจาก HTML template เพื่อให้อธิบาย UI และ logic ได้แยกกัน
 
-- `pages/home.ts` + `home.html` — ทางเข้าระบบ มี link ไปหน้าร้านและไรเดอร์ ไม่มีการสร้าง order สาธารณะ
-- `pages/login.ts` + `login.html` — รับ username/password, ตรวจค่าว่าง, เรียก `Api.login()` และ navigate ไป `/admin` เมื่อสำเร็จ ใช้ `Task` ป้องกันกดซ้ำและรายงาน error
-- `pages/overview.ts` + `overview.html` — เลือกวันที่แล้วเรียก `GET /dashboard`; แสดงข้อมูลร้าน จำนวนลูกค้า/ไรเดอร์ สรุปยอดและแผนประจำวัน รับ event `dev-data-created` เพื่อ refresh หลังสร้างข้อมูล
-- `pages/records.ts` + `records.html` — CRUD สำหรับ customer/order/rider ใช้ route `data.kind` เปลี่ยน schema, filter, query, label และ API path มี pagination/search, editor dialog, confirmation ก่อนลบ และแผนที่แก้พิกัดลูกค้า
-- `pages/record-fields.ts` — นิยาม `RecordKind`, ชื่อเมนู และ field config ของ customer/rider ให้ form renderer ใช้ร่วมกัน
-- `pages/plans.ts` + `plans.html` — โหลด plan และ rider, ขอ preview, บันทึกร่าง, เปิดแผน, เปลี่ยนไรเดอร์, คำนวณใหม่, ยืนยันหรือยกเลิก ใช้ `RouteCard` กับ `ParcelMap` แสดงเส้นทางและสถานะ
-- `pages/settings.ts` + `settings.html` — โหลดค่าร้าน, แสดง field ตามกลุ่ม, แก้พิกัดบนแผนที่ และส่งเฉพาะ field ที่อนุญาตให้แก้ผ่าน `PATCH /settings`
-- `pages/rider.ts` + `rider.html` — อ่าน code จาก URL หรือช่องกรอก, โหลด `GET /jobs/:code`, แสดงแผนที่/จุดส่ง แล้วเรียก start, deliver หรือ undo ตาม action
-- `home.html`, `login.html`, `overview.html`, `records.html`, `plans.html`, `settings.html`, `rider.html` — markup ของแต่ละหน้า เช่น form, state, buttons, list และ child components; event binding เรียก method ของ class ที่เป็นเจ้าของ template นั้น
+- `pages/home/home.ts` + `home.html` — ทางเข้าระบบ มี link ไปหน้าร้านและไรเดอร์ ไม่มีการสร้าง order สาธารณะ
+- `pages/login/login.ts` + `login.html` — รับ username/password, ตรวจค่าว่าง, เรียก `Api.login()` และ navigate ไป `/admin` เมื่อสำเร็จ ใช้ `Task` ป้องกันกดซ้ำและรายงาน error
+- `pages/overview/overview.ts` + `overview.html` — เลือกวันที่แล้วเรียก `GET /dashboard`; แสดงข้อมูลร้าน จำนวนลูกค้า/ไรเดอร์ สรุปยอดและแผนประจำวัน รับ event `dev-data-created` เพื่อ refresh หลังสร้างข้อมูล
+- `pages/records/records.ts` + `records.html` — CRUD สำหรับ customer/order/rider ใช้ route `data.kind` เปลี่ยน schema, filter, query, label และ API path มี pagination/search, editor dialog, confirmation ก่อนลบ และแผนที่แก้พิกัดลูกค้า
+- `pages/records/record-fields.ts` — นิยาม `RecordKind`, ชื่อเมนู และ field config ของ customer/rider ให้ form renderer ใช้ร่วมกัน
+- `pages/plans/plans.ts` + `plans.html` — โหลด plan และ rider, ขอ preview, บันทึกร่าง, เปิดแผน, เปลี่ยนไรเดอร์, คำนวณใหม่, ยืนยันหรือยกเลิก ใช้ `RouteCard` กับ `ParcelMap` แสดงเส้นทางและสถานะ
+- `pages/settings/settings.ts` + `settings.html` — โหลดค่าร้าน, แสดง field ตามกลุ่ม, แก้พิกัดบนแผนที่ และส่งเฉพาะ field ที่อนุญาตให้แก้ผ่าน `PATCH /settings`
+- `pages/rider/rider.ts` + `rider.html` — อ่าน code จาก URL หรือช่องกรอก, โหลด `GET /jobs/:code`, แสดงแผนที่/จุดส่ง แล้วเรียก start, deliver หรือ undo ตาม action
+- template ของแต่ละหน้า เช่น `home.html`, `records.html` และ `rider.html` — markup ของ form, state, buttons, list และ child components; event binding เรียก method ของ class ที่เป็นเจ้าของ template นั้น
 
 `RecordsPage` รวม 3 เมนูที่มีงานตารางและ CRUD คล้ายกันเพื่อลด logic ซ้ำ โดย route ระบุ resource ที่ต้องแสดงและ `record-fields.ts` ระบุ field ของแต่ละชนิด หน้าแผน/ตั้งค่า/ใบงานแยก page เพราะ workflow แตกต่างกันชัดเจน
 
 ## 4. Reusable components — `components/`
 
-- `components/icon.ts` — wrapper ของ Lucide Angular ใช้ชื่อเชิงความหมาย เช่น `home`, `truck`, `route` แทนการเขียน SVG/icon import ซ้ำในทุกหน้า
-- `components/parcel-map.ts` — wrapper ของ Leaflet สำหรับแสดง OSM tiles, markers, route geometry, zoom/fit/expand และการเลือกตำแหน่ง รองรับโหมดแก้ไขพิกัดด้วย event `pointChange`; geometry จาก API คือเส้นทางถนน ถ้าไม่มี geometry จะแสดงข้อมูลเส้นทางตาม fallback ที่ได้รับ แผนที่ไม่แสดง GPS สด
-- `components/page-title.ts` — รับ `title`/`description` และ `ng-content` สำหรับ action ที่อยู่ในแนวเดียวกับหัวข้อ
-- `components/request-state.ts` — รับ busy/error/success แสดง skeleton และ Notice; ซ่อน success หลังเวลาที่กำหนดและให้ผู้ใช้ปิดข้อความได้
-- `components/delivery-status.ts` — แปลง status code เป็น label ภาษาไทยจาก model และใส่ `data-status` ให้ CSS กำหนดรูปลักษณ์ตามสถานะ
+- `components/ui/icon.ts` — wrapper ของ Lucide Angular ใช้ชื่อเชิงความหมาย เช่น `home`, `truck`, `route` แทนการเขียน SVG/icon import ซ้ำในทุกหน้า
+- `components/map/parcel-map.ts` — wrapper ของ Leaflet สำหรับแสดง OSM tiles, markers, route geometry, zoom/fit/expand และการเลือกตำแหน่ง รองรับโหมดแก้ไขพิกัดด้วย event `pointChange`; geometry จาก API คือเส้นทางถนน ถ้าไม่มี geometry จะแสดงข้อมูลเส้นทางตาม fallback ที่ได้รับ แผนที่ไม่แสดง GPS สด
+- `components/ui/page-title.ts` — รับ `title`/`description` และ `ng-content` สำหรับ action ที่อยู่ในแนวเดียวกับหัวข้อ
+- `components/ui/request-state.ts` — รับ busy/error/success แสดง skeleton และ Notice; ซ่อน success หลังเวลาที่กำหนดและให้ผู้ใช้ปิดข้อความได้
+- `components/ui/delivery-status.ts` — แปลง status code เป็น label ภาษาไทยจาก model และใส่ `data-status` ให้ CSS กำหนดรูปลักษณ์ตามสถานะ
+- `components/delivery-stop-card/` — แสดงข้อมูลและ action ของจุดส่งหนึ่งจุด รับ `Stop`, job status และ busy state ผ่าน input; ส่ง `deliver`/`undo` กลับด้วย output เพื่อให้ page ยังเป็นผู้เรียก API เอง
 
 ## 5. Shared controls, dialogs และสถานะ
 

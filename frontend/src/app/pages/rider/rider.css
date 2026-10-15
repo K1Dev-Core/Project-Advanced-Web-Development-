@@ -1,0 +1,137 @@
+.job-meta {
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.job-summary {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.4fr);
+  gap: 12px;
+  margin: 16px 0 20px;
+}
+.box-summary,
+.progress-summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e5e5ea;
+  border-radius: 8px;
+  background: #f9f9fb;
+}
+.box-summary > ui-icon {
+  color: #b74418;
+}
+.box-summary div {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  column-gap: 6px;
+}
+.box-summary span {
+  grid-column: 1 / -1;
+  color: #626871;
+  font-size: 12px;
+}
+.box-summary strong {
+  color: #1c1c1e;
+  font-size: 32px;
+  line-height: 1.2;
+}
+.box-summary small {
+  color: #626871;
+}
+.progress-summary {
+  display: grid;
+  gap: 8px;
+}
+.progress-copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #626871;
+  font-size: 13px;
+}
+.progress-copy strong {
+  color: #1c1c1e;
+  white-space: nowrap;
+}
+.progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e5e5ea;
+}
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #b74418;
+  transition: width 180ms ease-out;
+}
+.progress-summary > small {
+  color: #8a350b;
+  font-weight: 600;
+}
+.rider-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.rider-step {
+  position: relative;
+  min-width: 0;
+  padding-left: 42px;
+}
+.rider-step:not(:last-child)::after {
+  position: absolute;
+  top: 40px;
+  bottom: -12px;
+  left: 15px;
+  width: 2px;
+  background: #d1d1d6;
+  content: '';
+}
+.step-number {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  left: 0;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 2px solid #d1d1d6;
+  border-radius: 50%;
+  background: #fff;
+  color: #626871;
+  font-size: 13px;
+  font-weight: 700;
+}
+.rider-step.completed .step-number {
+  border-color: #2e7d45;
+  background: #edf7ef;
+  color: #206a35;
+}
+@media (max-width: 600px) {
+  .job-summary {
+    grid-template-columns: 1fr;
+  }
+  .box-summary {
+    min-height: 90px;
+  }
+  .rider-step {
+    padding-left: 38px;
+  }
+  .step-number {
+    width: 30px;
+    height: 30px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-track span {
+    transition: none;
+  }
+}

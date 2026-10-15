@@ -3,9 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api } from '../services/api';
 import { today } from '../models/models';
-import { Icon } from '../components/icon';
+import { Icon } from '../components/ui/icon';
 import { DateControl } from './date-control';
-import { RequestState } from '../components/request-state';
+import { RequestState } from '../components/ui/request-state';
 
 type Kind = 'bundle' | 'customers' | 'orders' | 'riders';
 interface Created {
