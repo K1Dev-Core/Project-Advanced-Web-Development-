@@ -1,0 +1,94 @@
+<page-title [title]="names[kind]" description="ค้นหา เพิ่ม และแก้ไขข้อมูล"
+  ><button class="primary" (click)="edit()" [disabled]="task.busy() || !!task.error()">
+    <ui-icon name="plus" />เพิ่ม{{ names[kind] }}
+  </button></page-title
+>
+<section class="panel">
+  <form ngNativeValidate class="filters" (ngSubmit)="page = 1; load()">
+    <label class="grow"
+      >ค้นหา<input name="search" [(ngModel)]="search" placeholder="ชื่อหรือเบอร์โทร"
+    /></label>
+    @if (kind === 'orders') {
+      <label
+        >วันที่จัดส่ง<app-date name="date" [(ngModel)]="date" required label="วันที่จัดส่ง"
+      /></label>
+      <label
+        >สถานะ<mat-select name="status" [(ngModel)]="status" aria-label="สถานะ">
+          <mat-option value="" data-value="">ทั้งหมด</mat-option>
+          <mat-option value="pending" data-value="pending">รอจัดส่ง</mat-option>
+          <mat-option value="assigned" data-value="assigned">จัดไรเดอร์แล้ว</mat-option>
+          <mat-option value="delivered" data-value="delivered">ส่งสำเร็จ</mat-option>
+          <mat-option value="cancelled" data-value="cancelled">ยกเลิก</mat-option>
+        </mat-select></label
+      >
+    }
+    <button [disabled]="task.busy()"><ui-icon name="search" />ค้นหา</button>
+  </form>
+  <request-state [busy]="task.busy()" [error]="task.error()" [success]="task.success()" />
+  @if (task.error()) {
+    <button (click)="load()">ลองอีกครั้ง</button>
+  }
+  @if (!task.busy() && !task.error()) {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>ชื่อ / รายการ</th>
+            <th>รายละเอียด</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr>
+              <td data-label="ชื่อ / รายการ">
+                <strong>{{ name(row) }}</strong>
+              </td>
+              <td data-label="รายละเอียด">{{ detail(row) }}</td>
+              <td data-label="จัดการ">
+                <div class="actions">
+                  <button (click)="edit(row)" [disabled]="locked(row)">แก้ไข</button
+                  ><button class="danger-text" (click)="remove(row)" [disabled]="locked(row)">
+                    <ui-icon name="trash" />ลบ
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" class="empty">ไม่พบข้อมูล เพิ่มข้อมูลใหม่หรือเปลี่ยนคำค้นหา</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span>หน้า {{ page }} / {{ totalPages }}</span>
+      <div class="actions">
+        <button (click)="page = page - 1; load()" [disabled]="page <= 1">ก่อนหน้า</button
+        ><button (click)="page = page + 1; load()" [disabled]="page >= totalPages">ถัดไป</button>
+      </div>
+    </div>
+  }
+</section>
+<dialog #editor aria-labelledby="editor-title" (cancel)="guardClose($event)">
+  <form ngNativeValidate (ngSubmit)="save()">
+    <div class="dialog-heading">
+      <h2 id="editor-title">{{ selected ? 'แก้ไข' : 'เพิ่ม' }}{{ names[kind] }}</h2>
+      <button type="button" (click)="close()" [disabled]="saveTask.busy()">ปิด</button>
+    </div>
+    <fieldset [disabled]="saveTask.busy()">
+      <form-fields [disabled]="saveTask.busy()" [fields]="fields" [values]="values" />
+      @if (kind === 'customers') {
+        <div class="map-frame">
+          <parcel-map [points]="[point()]" [editable]="true" (pointChange)="pick($event)" />
+        </div>
+      }
+    </fieldset>
+    <request-state [busy]="saveTask.busy()" [error]="saveTask.error()" />
+    <div class="dialog-actions">
+      <button type="button" (click)="close()" [disabled]="saveTask.busy()">ยกเลิก</button
+      ><button class="primary" [disabled]="saveTask.busy()"><ui-icon name="check" />บันทึก</button>
+    </div>
+  </form>
+</dialog>

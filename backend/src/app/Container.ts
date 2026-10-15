@@ -1,3 +1,5 @@
+import { TrackingService } from "../modules/tracking/TrackingService";
+import { TrackingController } from "../modules/tracking/TrackingController";
 import { AppConfig } from "../config/AppConfig";
 import { BaseController } from "../core/http/BaseController";
 import { Database } from "../database/Database";
@@ -47,6 +49,7 @@ export class Container {
   readonly jobService: JobService;
   readonly simulationService: SimulationService;
   readonly dashboardService: DashboardService;
+  readonly trackingService: TrackingService;
 
   constructor(readonly config: AppConfig) {
     this.database = Database.connect(config.database);
@@ -62,6 +65,7 @@ export class Container {
     const planRepository = new PlanRepository(this.database);
 
     this.settingsService = new SettingsService(settingsRepository);
+    this.trackingService = new TrackingService(this.database, orderRepository, this.settingsService);
     this.customerService = new CustomerService(customerRepository, orderRepository);
     this.orderService = new OrderService(
       orderRepository,
@@ -123,6 +127,7 @@ export class Container {
       new RiderController(this.riderService),
       new PlanController(this.planService),
       new JobController(this.jobService),
+      new TrackingController(this.trackingService),
       new SimulationController(this.simulationService),
     ];
   }

@@ -1,0 +1,161 @@
+@use '@angular/material' as mat;
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$orange-palette,
+        tertiary: mat.$orange-palette,
+      ),
+      typography: 'system-ui',
+      density: 0,
+    )
+  );
+  @include mat.theme-overrides(
+    (
+      primary: #c2410c,
+      on-primary: #fff,
+      primary-container: #fff2eb,
+      on-primary-container: #8f3109,
+      surface: #fff,
+      surface-container: #fff,
+      surface-container-high: #fff,
+      surface-container-low: #f9f9fb,
+      on-surface: #1c1c1e,
+      on-surface-variant: #6e6e73,
+      outline: #c7c7cc,
+      outline-variant: #d9d9de,
+    )
+  );
+}
+.mat-mdc-select {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #d1d1d6;
+  border-radius: 4px;
+  background: white;
+  font:
+    14px system-ui,
+    sans-serif;
+}
+.mat-mdc-select:focus {
+  outline: 3px solid rgb(183 68 24 / 14%);
+  border-color: #c2410c;
+}
+.mat-mdc-select-disabled {
+  opacity: 0.55;
+  background: #f7f8fa;
+}
+.mat-mdc-select-panel {
+  border: 1px solid #e5e5ea;
+  border-radius: 5px !important;
+  box-shadow: 0 4px 16px rgb(28 28 30 / 12%) !important;
+}
+.mat-mdc-option {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif;
+  font-size: 14px;
+  min-height: 44px;
+}
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: #fff2eb !important;
+}
+.date-control {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  border: 1px solid #d1d1d6;
+  border-radius: 4px;
+  background: #fff;
+}
+.date-control:focus-within {
+  outline: 3px solid rgb(183 68 24 / 14%);
+  border-color: #c2410c;
+}
+.date-control input:not([type='checkbox']) {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  padding: 9px 12px;
+}
+.date-control .mat-mdc-icon-button {
+  border: 0;
+  padding: 10px;
+  background: transparent;
+  min-height: 44px;
+}
+.mat-datepicker-content {
+  border: 1px solid #e5e5ea;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 16px rgb(28 28 30 / 12%) !important;
+}
+.mat-calendar button {
+  border: 0;
+  min-height: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif;
+}
+.mat-calendar button:hover:not(:disabled) {
+  background: transparent;
+}
+.confirm-content {
+  padding: 24px;
+}
+.confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  background: #fff2eb;
+  color: #c2410c;
+  margin-bottom: 16px;
+}
+.themed-confirm .confirm-content .mat-mdc-dialog-title {
+  padding: 0;
+  font:
+    600 20px/1.6 system-ui,
+    sans-serif;
+}
+.themed-confirm .confirm-content .mat-mdc-dialog-title::before {
+  display: none;
+}
+.themed-confirm .confirm-content .mat-mdc-dialog-content {
+  padding: 8px 0 24px;
+  font:
+    14px/1.8 system-ui,
+    sans-serif;
+  color: #626871;
+}
+.themed-confirm .confirm-content .mat-mdc-dialog-actions {
+  padding: 0;
+  gap: 12px;
+}
+.themed-confirm .mat-mdc-dialog-surface {
+  border-radius: 6px;
+}
+@media (max-width: 700px) {
+  .mat-mdc-select {
+    font-size: 16px;
+    min-height: 46px;
+  }
+  .mat-datepicker-content {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+.mat-calendar table {
+  margin: 0;
+}
+.mat-calendar th,
+.mat-calendar td {
+  border: 0;
+  padding: 0;
+}
+.mat-calendar-table-header th {
+  background: transparent;
+}

@@ -1,0 +1,203 @@
+<button
+  class="dev-trigger"
+  type="button"
+  aria-label="เปิด Dev tools"
+  title="สร้างข้อมูลทดสอบ"
+  aria-haspopup="dialog"
+  [attr.aria-expanded]="opened()"
+  (click)="open()"
+>
+  <ui-icon name="spark" />
+</button>
+<dialog
+  #panel
+  class="dev-dialog"
+  aria-labelledby="dev-title"
+  (close)="closed()"
+  (cancel)="guardClose($event)"
+  (keydown.escape)="calendarEscape($event)"
+>
+  <div class="dev-heading">
+    <div>
+      <h2 id="dev-title">Dev tools</h2>
+      <p>สร้างข้อมูลสำหรับลองจัดส่ง</p>
+    </div>
+    <button type="button" aria-label="ปิด Dev tools" (click)="close()" [disabled]="busy()">
+      <ui-icon name="close" />
+    </button>
+  </div>
+  <div class="dev-body">
+    @if (!api.token()) {
+      <section class="dev-empty">
+        <ui-icon name="shield" />
+        <h3>เข้าสู่ระบบร้านก่อน</h3>
+        <p>ใช้บัญชีเจ้าของร้านเพื่อสร้างลูกค้า ไรเดอร์ และรายการสั่งอาหาร</p>
+        <a class="button primary" routerLink="/admin/login" (click)="close()">เข้าสู่ระบบร้าน</a>
+      </section>
+    } @else {
+      <form ngNativeValidate (ngSubmit)="generate()">
+        <fieldset [disabled]="busy()">
+          <div class="dev-choices" role="group" aria-label="ประเภทข้อมูลที่ต้องการสร้าง">
+            @for (choice of choices; track choice.kind) {
+              <button
+                type="button"
+                [class.active]="kind === choice.kind"
+                [attr.aria-pressed]="kind === choice.kind"
+                (click)="kind = choice.kind"
+              >
+                <ui-icon [name]="choice.icon" /><span>{{ choice.label }}</span>
+              </button>
+            }
+          </div>
+          @if (kind === 'bundle') {
+            <p class="dev-note">
+              สร้างลูกค้าและไรเดอร์ก่อน แล้วสร้างรายการสั่งอาหาร พร้อมนำไปคำนวณแผนจัดส่ง
+            </p>
+          }
+          <div class="dev-grid">
+            @if (includes('customers')) {
+              <label
+                >จำนวนลูกค้า<input
+                  name="customerCount"
+                  type="number"
+                  [(ngModel)]="customerCount"
+                  min="1"
+                  max="500"
+                  step="1"
+                  required
+              /></label>
+            }
+            @if (includes('riders')) {
+              <label
+                >จำนวนไรเดอร์<input
+                  name="riderCount"
+                  type="number"
+                  [(ngModel)]="riderCount"
+                  min="1"
+                  max="100"
+                  step="1"
+                  required
+              /></label>
+            }
+            @if (includes('orders')) {
+              <label
+                >จำนวนรายการสั่งอาหาร<input
+                  name="orderCount"
+                  type="number"
+                  [(ngModel)]="orderCount"
+                  min="1"
+                  max="500"
+                  step="1"
+                  required
+              /></label>
+              <label
+                >วันที่จัดส่ง<app-date
+                  name="deliveryDate"
+                  [(ngModel)]="deliveryDate"
+                  label="วันที่จัดส่งข้อมูลทดสอบ"
+                  required
+                  [disabled]="busy()"
+              /></label>
+            }
+            @if (includes('customers')) {
+              <label
+                >รัศมีรอบร้าน (กม.)<input
+                  name="radiusKm"
+                  type="number"
+                  [(ngModel)]="radiusKm"
+                  min="0.2"
+                  max="50"
+                  step="0.1"
+                  required
+              /></label>
+            }
+          </div>
+          <details class="dev-advanced">
+            <summary>ตัวเลือกเพิ่มเติม</summary>
+            <label
+              >Seed (ไม่บังคับ)<input
+                name="seed"
+                type="number"
+                [(ngModel)]="seed"
+                min="0"
+                max="4294967295"
+                step="1"
+                placeholder="เว้นว่างเพื่อสุ่มใหม่"
+            /></label>
+            <p class="dev-note">ใช้ตัวเลขเดิมเมื่อต้องการสุ่มข้อมูลรูปแบบเดิม</p>
+          </details>
+          <div class="dev-preview-summary">
+            <strong>ข้อมูลที่จะสร้าง</strong>
+            <ul>
+              @if (includes('customers')) {
+                <li>ลูกค้า {{ customerCount }} คน · รอบร้าน {{ radiusKm }} กม.</li>
+              }
+              @if (includes('riders')) {
+                <li>ไรเดอร์ {{ riderCount }} คน · พร้อมรับงาน</li>
+              }
+              @if (includes('orders')) {
+                <li>รายการสั่งอาหาร {{ orderCount }} รายการ · {{ deliveryDate }}</li>
+              }
+            </ul>
+            <p class="dev-note">
+              บันทึกลง backend ที่แอปเชื่อมต่ออยู่จริง ลูกค้าและรายการสั่งอาหารมีสถานะข้อมูลจำลอง
+              ข้อมูลเดิมยังอยู่ครบ
+            </p>
+            @if (includes('orders')) {
+              <p class="dev-note">
+                ถ้าลูกค้าไม่พอ ระบบจะสร้างเพิ่มให้อัตโนมัติ จำนวนกล่องและราคาใช้การตั้งค่าร้าน
+              </p>
+            }
+          </div>
+          <button class="primary dev-create" [disabled]="busy()">
+            <ui-icon name="plus" />{{ busy() ? 'กำลังสร้างข้อมูล…' : 'สร้างข้อมูลทดสอบ' }}
+          </button>
+        </fieldset>
+      </form>
+      <request-state [busy]="busy()" [error]="error()" />
+      @if (step()) {
+        <p role="status">{{ step() }}</p>
+      }
+      @if (results().length) {
+        <section class="dev-results" aria-labelledby="dev-result-title">
+          <h3 id="dev-result-title">
+            สร้างแล้ว{{ error() ? 'บางส่วน' : busy() ? '' : 'เรียบร้อย' }}
+          </h3>
+          <ul>
+            @for (result of results(); track $index) {
+              <li>
+                <ui-icon name="check" /><span
+                  >{{ result.kind }} {{ result.count }} รายการ<small
+                    >Seed {{ result.seed }}
+                    @if (result.customersCreated) {
+                      · เพิ่มลูกค้าอัตโนมัติ {{ result.customersCreated }} คน
+                    }
+                  </small></span
+                >
+              </li>
+            }
+          </ul>
+          @if (!busy()) {
+            <div class="actions">
+              <a class="button" routerLink="/admin/customers" (click)="close()">ดูลูกค้า</a
+              ><a class="button" routerLink="/admin/riders" (click)="close()">ดูไรเดอร์</a
+              ><a
+                class="button primary"
+                routerLink="/admin/orders"
+                [queryParams]="{ date: deliveryDate }"
+                (click)="close()"
+                >ดูรายการส่ง</a
+              >
+            </div>
+          }
+        </section>
+      }
+      @if (error()) {
+        <p class="dev-note">
+          หากการเชื่อมต่อขาดระหว่างสร้าง ให้ตรวจรายการก่อนกดสร้างซ้ำ
+          รายการที่สร้างสำเร็จแล้วจะยังอยู่ในระบบ
+        </p>
+      }
+    }
+  </div>
+</dialog>

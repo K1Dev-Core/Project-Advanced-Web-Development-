@@ -1,0 +1,143 @@
+<page-title title="แผนจัดส่ง" description="คำนวณเส้นทาง เลือกไรเดอร์ แล้วยืนยันแผน" />
+<section class="panel">
+  <form ngNativeValidate class="filters" (ngSubmit)="preview()">
+    <label
+      >วันที่จัดส่ง<app-date
+        name="date"
+        [(ngModel)]="date"
+        (changed)="load()"
+        required
+        [disabled]="task.busy()"
+        label="วันที่จัดส่ง"
+    /></label>
+    <label class="grow"
+      >เป้าหมาย<mat-select
+        name="objective"
+        [(ngModel)]="objective"
+        [disabled]="task.busy()"
+        aria-label="เป้าหมาย"
+      >
+        <mat-option value="balanced" data-value="balanced">สมดุล</mat-option>
+        <mat-option value="cost" data-value="cost">ประหยัดที่สุด</mat-option>
+        <mat-option value="distance" data-value="distance">ระยะทางสั้นที่สุด</mat-option>
+        <mat-option value="time" data-value="time">ส่งเร็วที่สุด</mat-option>
+      </mat-select></label
+    >
+    <button class="primary" [disabled]="task.busy()"><ui-icon name="route" />คำนวณเส้นทาง</button>
+  </form>
+</section>
+<request-state [busy]="task.busy()" [error]="task.error()" [success]="task.success()" />
+@if (task.error()) {
+  <button (click)="load()" [disabled]="task.busy()">โหลดข้อมูลอีกครั้ง</button>
+}
+@if (proposals().length) {
+  <section class="panel">
+    <h2>เลือกแผนที่ต้องการ</h2>
+    <div class="proposal-list">
+      @for (proposal of proposals(); track $index) {
+        <label class="proposal"
+          ><input
+            type="radio"
+            name="proposal"
+            [value]="$index"
+            [(ngModel)]="choice"
+            [disabled]="task.busy()"
+          /><span
+            >ตัวเลือก {{ $index + 1
+            }}<small
+              >{{ proposal.summary.totalDistanceKm | number: '1.1-1' }} กม. · ค่าไรเดอร์ ฿{{
+                proposal.summary.totalRiderFee | number: '1.0-0'
+              }}
+              · {{ proposal.summary.riderCount }} คน</small
+            ><small
+              >กำไรสุทธิ ฿{{ proposal.summary.netProfit | number: '1.0-0' }} · ส่งครบ {{
+                proposal.summary.latestArrivalTime
+              }} น. · {{
+                proposal.summary.onTime
+                  ? 'ทันเวลา'
+                  : 'เกินเวลา ' + proposal.summary.lateStops + ' จุด'
+              }}</small
+            ></span
+          ></label
+        >
+      }
+    </div>
+    <button class="primary" (click)="create()" [disabled]="task.busy()">บันทึกแผนร่าง</button>
+  </section>
+}
+@if (plans().length) {
+  <label class="plan-picker"
+    >แผนที่บันทึกไว้<mat-select
+      [ngModel]="plan()?.id || ''"
+      (ngModelChange)="select($event)"
+      [disabled]="task.busy()"
+      aria-label="แผนที่บันทึกไว้"
+    >
+      @for (p of plans(); track p.id) {
+        <mat-option [value]="p.id" [attr.data-value]="p.id"
+          >แผน #{{ p.id }} · {{ statusLabel(p.status) }}</mat-option
+        >
+      }
+    </mat-select></label
+  >
+}
+@if (plan(); as p) {
+  <section class="panel">
+    <div class="section-heading">
+      <h2>แผน #{{ p.id }}</h2>
+      <delivery-status [value]="p.status" />
+    </div>
+    <p>
+      {{ p.summary.orderCount }} รายการ · {{ p.summary.boxCount }} กล่อง ·
+      {{ p.summary.totalDistanceKm | number: '1.1-1' }} กม. · ค่าไรเดอร์ ฿{{
+        p.summary.totalRiderFee | number: '1.0-0'
+      }}
+    </p>
+    <div class="plan-financials" aria-label="สรุปกำไรและเวลา">
+      <div><small>รายรับ</small><strong>฿{{ p.summary.revenue | number: '1.0-0' }}</strong></div>
+      <div><small>ต้นทุนอาหาร</small><strong>฿{{ p.summary.foodCost | number: '1.0-0' }}</strong></div>
+      <div><small>กำไรสุทธิหลังหักค่าส่ง</small><strong [class.loss-text]="p.summary.netProfit < 0">฿{{ p.summary.netProfit | number: '1.0-0' }}</strong></div>
+      <div><small>ส่งครบตามแผน</small><strong [class.late-text]="!p.summary.onTime">{{ p.summary.latestArrivalTime }} น. · {{ p.summary.onTime ? 'ทันเวลา' : 'เกินเวลา ' + p.summary.lateStops + ' จุด' }}</strong></div>
+    </div>
+    <p class="hint">{{ p.summary.distanceSource === 'road' ? 'คำนวณจากระยะทางถนนจริง' : 'คำนวณจากระยะทางโดยประมาณ — ตรวจสอบการเชื่อมต่อแผนที่ก่อนยืนยัน' }}</p>
+    <div class="map-frame"><parcel-map [routes]="p.routes" /></div>
+    <div class="actions">
+      @if (p.status === 'draft') {
+        <button
+          class="primary"
+          (click)="action('confirm')"
+          [disabled]="task.busy() || !assigned(p) || !p.summary.onTime"
+        >
+          ยืนยันแผน</button
+        ><button (click)="action('recalculate')" [disabled]="task.busy()">
+          <ui-icon name="refresh" />คำนวณใหม่
+        </button>
+      }
+      @if (p.status === 'draft' || p.status === 'confirmed') {
+        <button class="danger-text" (click)="cancel()" [disabled]="task.busy()">ยกเลิกแผน</button>
+      }
+    </div>
+    @if (p.status === 'draft' && !assigned(p)) {
+      <p class="hint">เลือกไรเดอร์ให้ครบทุกเส้นทางก่อนยืนยัน</p>
+    }
+    @if (p.status === 'draft' && !p.summary.onTime) {
+      <p class="notice warning" role="alert">แผนนี้มี {{ p.summary.lateStops }} จุดที่คาดว่าจะเกิน {{ p.deadlineTime }} น. คำนวณใหม่ก่อนยืนยัน</p>
+    }
+  </section>
+  <div class="two-columns">
+    @for (route of p.routes; track route.id) {
+      <route-card
+        [route]="route"
+        [riders]="riders()"
+        [editable]="p.status === 'draft'"
+        [showJob]="p.status === 'confirmed' || p.status === 'completed'"
+        [busy]="task.busy()"
+        (assign)="assign(route.id, $event)"
+      />
+    }
+  </div>
+} @else if (!task.busy() && !task.error() && !proposals().length) {
+  <section class="panel empty">
+    ยังไม่มีแผนในวันนี้ เริ่มจากเพิ่มรายการส่งแล้วกดคำนวณเส้นทาง
+  </section>
+}

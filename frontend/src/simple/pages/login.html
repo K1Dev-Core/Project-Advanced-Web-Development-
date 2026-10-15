@@ -1,0 +1,27 @@
+<div class="narrow">
+  <page-title title="เข้าสู่ระบบร้าน" description="ใช้บัญชีเจ้าของร้าน" />
+  <section class="panel login-panel">
+    <img
+      class="login-logo"
+      src="/brand/khaokong-logo.png"
+      alt="ข้าวกล่องเดลิเวอรี"
+      width="112"
+      height="84"
+    />
+    <form ngNativeValidate (ngSubmit)="login()">
+      <label
+        >ชื่อผู้ใช้<input name="username" [(ngModel)]="username" autocomplete="username" required
+      /></label>
+      <label
+        >รหัสผ่าน<input
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          autocomplete="current-password"
+          required
+      /></label>
+      <request-state [busy]="task.busy()" [error]="task.error()" />
+      <button class="primary" [disabled]="task.busy()"><ui-icon name="user" />เข้าสู่ระบบ</button>
+    </form>
+  </section>
+</div>

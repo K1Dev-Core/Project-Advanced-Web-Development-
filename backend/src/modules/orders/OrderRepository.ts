@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { Page, Pagination } from "../../core/http/Pagination";
 import { SqlExecutor } from "../../database/SqlExecutor";
 import { GeoMath, GeoPoint } from "../../shared/geo/GeoPoint";
@@ -16,6 +17,7 @@ import {
 } from "./Order";
 
 interface OrderRow {
+  tracking_code: string;
   id: number;
   customer_id: number;
   delivery_date: string;
@@ -90,6 +92,11 @@ export class OrderRepository {
     return rows.length > 0 ? this.map(rows[0]) : null;
   }
 
+  async findByTrackingCode(code: string): Promise<Order | null> {
+    const rows = await this.db.query<OrderRow>(`${OrderRepository.SELECT} WHERE o.tracking_code = ?`, [code]);
+    return rows.length ? this.map(rows[0]) : null;
+  }
+
   async findByIds(ids: number[]): Promise<Order[]> {
     if (ids.length === 0) {
       return [];
@@ -132,8 +139,8 @@ export class OrderRepository {
 
   async create(input: OrderCreateInput): Promise<number> {
     const result = await this.db.execute(
-      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note, is_simulated) VALUES (?, ?, ?, ?, ?, ?)",
-      [input.customerId, input.deliveryDate, input.boxes, input.unitPrice, input.note, input.simulated ? 1 : 0],
+      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note, is_simulated, tracking_code) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [input.customerId, input.deliveryDate, input.boxes, input.unitPrice, input.note, input.simulated ? 1 : 0, randomBytes(24).toString("hex")],
     );
     return result.insertId;
   }
@@ -143,7 +150,7 @@ export class OrderRepository {
       return 0;
     }
     const result = await this.db.execute(
-      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note, is_simulated) VALUES ?",
+      "INSERT INTO orders (customer_id, delivery_date, boxes, unit_price, note, is_simulated, tracking_code) VALUES ?",
       [
         inputs.map((input) => [
           input.customerId,
@@ -152,6 +159,7 @@ export class OrderRepository {
           input.unitPrice,
           input.note,
           input.simulated ? 1 : 0,
+          randomBytes(24).toString("hex"),
         ]),
       ],
     );
@@ -300,6 +308,7 @@ export class OrderRepository {
     const unitPrice = Number(row.unit_price);
     return {
       id: Number(row.id),
+      trackingCode: row.tracking_code,
       customerId: Number(row.customer_id),
       customer: {
         id: Number(row.customer_id),

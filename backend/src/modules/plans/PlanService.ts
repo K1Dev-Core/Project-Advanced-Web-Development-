@@ -197,6 +197,14 @@ export class PlanService {
       }
       this.ensureStatus(plan, ["draft"], "Only draft plans can be confirmed");
 
+      if (!plan.summary.onTime) {
+        throw HttpError.conflict(
+          `This plan has ${plan.summary.lateStops} stop(s) arriving after ${plan.deadlineTime}`,
+          "PLAN_LATE",
+          { lateStops: plan.summary.lateStops, deadlineTime: plan.deadlineTime },
+        );
+      }
+
       const stops = plan.routes.flatMap((route) => route.stops);
       const orderIds = stops.map((stop) => stop.orderId).filter((value): value is number => value !== null);
       const current = new Map((await orders.findByIds(orderIds)).map((order) => [order.id, order]));
@@ -326,12 +334,13 @@ export class PlanService {
       throw HttpError.unprocessable(`There are no pending orders to plan for ${date}`, "NO_PENDING_ORDERS");
     }
 
-    const oversized = orders.filter((order) => order.boxes > settings.maxBoxesPerOrder).map((order) => order.id);
+    const maxBoxesPerOrder = Math.min(settings.maxBoxesPerOrder, 3);
+    const oversized = orders.filter((order) => order.boxes > maxBoxesPerOrder).map((order) => order.id);
     if (oversized.length > 0) {
       throw HttpError.unprocessable(
-        `Some orders exceed ${settings.maxBoxesPerOrder} boxes`,
+        `Some orders exceed ${maxBoxesPerOrder} boxes`,
         "ORDERS_EXCEED_BOX_LIMIT",
-        { orderIds: oversized },
+        { orderIds: oversized, maxBoxesPerOrder },
       );
     }
 

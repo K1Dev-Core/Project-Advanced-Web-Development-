@@ -1,0 +1,29 @@
+<page-title title="ตั้งค่าร้าน" description="ข้อมูลร้าน เวลาออกส่ง และข้อจำกัดการจัดส่ง" />
+<request-state [busy]="task.busy()" [error]="task.error()" [success]="task.success()" />
+@if (task.error() && !loaded) {
+  <button (click)="load()">ลองอีกครั้ง</button>
+}
+@if (loaded) {
+  <form ngNativeValidate (ngSubmit)="save()">
+    <fieldset [disabled]="task.busy()">
+      <section class="panel">
+        <h2>ข้อมูลร้าน</h2>
+        <form-fields [disabled]="task.busy()" [fields]="shopFields" [values]="values" />
+        <div class="map-frame">
+          <parcel-map [editable]="true" [points]="[point()]" (pointChange)="pick($event)" />
+        </div>
+      </section>
+      <section class="panel">
+        <h2>รอบส่งและราคา</h2>
+        <form-fields [disabled]="task.busy()" [fields]="mainFields" [values]="values" />
+      </section>
+      <details class="panel">
+        <summary>ตั้งค่าเพิ่มเติม</summary>
+        <form-fields [disabled]="task.busy()" [fields]="extraFields" [values]="values" />
+      </details>
+      <button class="primary" [disabled]="task.busy()">
+        <ui-icon name="check" />บันทึกการตั้งค่า
+      </button>
+    </fieldset>
+  </form>
+}

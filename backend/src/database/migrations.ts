@@ -152,4 +152,12 @@ export const migrations: Migration[] = [
       "CREATE INDEX idx_orders_simulated ON orders (is_simulated)",
     ],
   },
+  {
+    version: 3,
+    name: "add_order_scoped_customer_tracking",
+    statements: [
+      "ALTER TABLE orders ADD COLUMN tracking_code CHAR(48) NULL, ADD UNIQUE INDEX uq_orders_tracking_code (tracking_code)",
+      "UPDATE orders SET tracking_code = LOWER(HEX(RANDOM_BYTES(24))) WHERE tracking_code IS NULL",
+    ],
+  },
 ];

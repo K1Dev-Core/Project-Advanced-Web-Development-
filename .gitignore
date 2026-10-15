@@ -1,0 +1,11 @@
+# Private local runtime and credentials
+.local/
+.env
+.env.*
+
+# Generated output and dependencies
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store

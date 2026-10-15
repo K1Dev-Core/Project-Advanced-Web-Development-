@@ -44,6 +44,7 @@ export interface JobSheet {
   instructions: string[];
   navigationUrl: string;
   path: GeoPoint[];
+  geometry: GeoPoint[];
   stops: JobSheetStop[];
   startedAt: string | null;
   completedAt: string | null;

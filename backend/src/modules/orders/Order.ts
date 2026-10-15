@@ -13,6 +13,7 @@ export interface OrderCustomer {
 }
 
 export interface Order {
+  trackingCode: string;
   id: number;
   customerId: number;
   customer: OrderCustomer;

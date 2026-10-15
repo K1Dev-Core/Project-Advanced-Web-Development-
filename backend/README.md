@@ -244,3 +244,15 @@ curl -X POST $API/plans/1/confirm -H "$AUTH"
 curl $API/jobs/<jobCode>
 curl -X DELETE $API/simulations/orders -H "$AUTH"
 ```
+
+## Parcel frontend extension: customer tracking and local runtime
+
+The Angular frontend is in `../frontend`. Run `npm run start:local` from the repository root to initialize an isolated MySQL database on port 33307, run migrations, bootstrap labeled starter records, and start both services. Owner credentials are generated into `.local/ACCESS.md` and `backend/.env`; neither is committed.
+
+Migration **3** adds `orders.tracking_code` (unique random 48-character hex capability). Existing orders are backfilled; newly created and simulated orders receive independent random codes. Owner order responses include `trackingCode` so the frontend can copy a customer link.
+
+`GET /api/tracking/:code` is public only to holders of that order's capability. It returns order status/count/date, first name, origin/destination coordinates, assigned rider display name and planned schedule. It does not expose owner data, rider job codes, other recipients, phone/address text or private notes. Responses are `Cache-Control: no-store`. Invalid IDs/codes and unknown capabilities return `TRACKING_NOT_FOUND` (404).
+
+`GET /api/jobs/:code` additionally includes `geometry` for rendering the existing road route in Leaflet. Existing route paths, owner permissions, rider job-code access and pricing/optimizer rules are unchanged. There is no live rider GPS endpoint.
+
+`npm run db:bootstrap-local` operates only on the isolated `songsook_local` database and preserves records if data already exists. The root launcher preserves any existing backend `.env` and refuses to repurpose a non-local configuration.

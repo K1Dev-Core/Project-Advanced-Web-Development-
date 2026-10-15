@@ -56,7 +56,7 @@ export class OrderService {
   async create(request: OrderCreateRequest): Promise<Order> {
     const settings = await this.settings.get();
     await this.ensureCustomer(request.customerId);
-    this.ensureBoxes(request.boxes, settings.maxBoxesPerOrder);
+    this.ensureBoxes(request.boxes, Math.min(settings.maxBoxesPerOrder, 3));
 
     const id = await this.orders.create({
       customerId: request.customerId,
@@ -96,7 +96,7 @@ export class OrderService {
       await this.ensureCustomer(changes.customerId);
     }
     if (changes.boxes !== undefined) {
-      this.ensureBoxes(changes.boxes, settings.maxBoxesPerOrder);
+      this.ensureBoxes(changes.boxes, Math.min(settings.maxBoxesPerOrder, 3));
     }
 
     await this.orders.update(id, changes);

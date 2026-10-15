@@ -1,0 +1,44 @@
+import { chromium } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+const browser = await chromium.launch();
+const context = await browser.newContext({
+  viewport: { width: 1440, height: 1000 },
+  deviceScaleFactor: 1,
+});
+const page = await context.newPage();
+const errors = [];
+page.on('pageerror', (error) => errors.push(error.message));
+await mkdir('review', { recursive: true });
+await page.goto('http://127.0.0.1:4201/customer');
+await page.locator('.home-intro').waitFor();
+await page.evaluate(() => document.fonts.ready);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/customer-desktop.png', fullPage: true });
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/preview.png' });
+await page.setViewportSize({ width: 390, height: 844 });
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/customer-mobile.png', fullPage: true });
+await page.goto('http://127.0.0.1:4201/rider');
+await page.getByRole('button', { name: 'ดูตัวอย่างใบงานไรเดอร์' }).click();
+await page.locator('.stop-card').first().waitFor();
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/rider-mobile.png', fullPage: true });
+await page.setViewportSize({ width: 1440, height: 1000 });
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/rider-desktop.png', fullPage: true });
+await page.goto('http://127.0.0.1:4201/admin/login');
+await page.getByRole('button', { name: 'เปิดตัวอย่างหน้าจัดการ' }).click();
+await page.locator('.stats-grid').waitFor();
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/admin-desktop.png', fullPage: true });
+await page.setViewportSize({ width: 390, height: 844 });
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/admin-mobile.png', fullPage: true });
+await page.locator('.mobile-nav').getByRole('link', { name: 'แผนจัดส่ง', exact: true }).click();
+await page.locator('.plan-map').waitFor();
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: 'review/planning-mobile.png', fullPage: true });
+await browser.close();
+if (errors.length) throw new Error(errors.join('\n'));
+console.log('Captured seven review screens and one preview. No browser runtime errors.');

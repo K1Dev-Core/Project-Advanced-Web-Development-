@@ -10,9 +10,9 @@ export class PlanningParametersFactory {
       riderBaseFee: settings.riderBaseFee,
       riderFeePerKmPerBox: settings.riderFeePerKmPerBox,
       riderSpeedKmh: settings.riderSpeedKmh,
-      maxOrdersPerRider: settings.maxOrdersPerRider,
+      maxOrdersPerRider: Math.min(settings.maxOrdersPerRider, 3),
       departureTime: settings.departureTime,
-      deliveryWindowMinutes: settings.deliveryWindowMinutes,
+      deliveryWindowMinutes: Math.min(settings.deliveryWindowMinutes, 60),
       serviceMinutesPerStop: settings.serviceMinutesPerStop,
       roadDistanceFactor: settings.roadDistanceFactor,
     };

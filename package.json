@@ -1,0 +1,12 @@
+{
+  "name": "khaokong-delivery",
+  "private": true,
+  "scripts": {
+    "start": "npm start --prefix frontend",
+    "start:local": "node scripts/local-dev.mjs",
+    "build": "npm run build --prefix frontend && npm run compile --prefix backend",
+    "typecheck": "npm run typecheck --prefix frontend",
+    "test": "npm test --prefix backend && npm test --prefix frontend",
+    "test:live": "npm run test:live --prefix frontend"
+  }
+}
