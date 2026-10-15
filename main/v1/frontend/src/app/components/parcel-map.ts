@@ -9,13 +9,13 @@ import {
   viewChild,
   OnDestroy,
   ViewEncapsulation,
-} from '@angular/core';
-import type * as Leaflet from 'leaflet';
-import { Point, DeliveryRoute } from '../models/models';
-import { Icon } from './icon';
-type RouteShape = Pick<DeliveryRoute, 'path' | 'geometry' | 'color'>;
+} from "@angular/core";
+import type * as Leaflet from "leaflet";
+import { Point, DeliveryRoute } from "../models/models";
+import { Icon } from "./icon";
+type RouteShape = Pick<DeliveryRoute, "path" | "geometry" | "color">;
 @Component({
-  selector: 'parcel-map',
+  selector: "parcel-map",
   imports: [Icon],
   encapsulation: ViewEncapsulation.None,
   template: ` <div
@@ -55,12 +55,13 @@ type RouteShape = Pick<DeliveryRoute, 'path' | 'geometry' | 'color'>;
         class="map-tool"
         [class.active]="clearMap()"
         type="button"
-        [attr.aria-label]="clearMap() ? 'ใช้สีแผนที่ปกติ' : 'ใช้ธีมแผนที่สว่างชัด'"
+        [attr.aria-label]="
+          clearMap() ? 'ใช้สีแผนที่ปกติ' : 'ใช้ธีมแผนที่สว่างชัด'
+        "
         [title]="clearMap() ? 'ใช้สีแผนที่ปกติ' : 'ใช้ธีมแผนที่สว่างชัด'"
         (click)="clearMap.update((value) => !value)"
       >
-        <ui-icon name="eye" />
-      </button
+        <ui-icon name="eye" /></button
       ><button
         class="map-tool"
         type="button"
@@ -71,12 +72,15 @@ type RouteShape = Pick<DeliveryRoute, 'path' | 'geometry' | 'color'>;
       </button>
     </div>
     @if (loading()) {
-      <div class="map-loading" role="status"><span class="spinner"></span>กำลังโหลดแผนที่จริง</div>
+      <div class="map-loading" role="status">
+        <span class="spinner"></span>กำลังโหลดแผนที่จริง
+      </div>
     }
     <div class="map-messages">
       @if (tileError()) {
         <div class="map-error" role="status">
-          แผนที่พื้นหลังโหลดไม่สำเร็จ <button type="button" (click)="retry()">ลองอีกครั้ง</button> ·
+          แผนที่พื้นหลังโหลดไม่สำเร็จ
+          <button type="button" (click)="retry()">ลองอีกครั้ง</button> ·
           หมุดยังอ้างอิงพิกัดจริง
         </div>
       }
@@ -179,7 +183,12 @@ type RouteShape = Pick<DeliveryRoute, 'path' | 'geometry' | 'color'>;
         border-radius: 50%;
       }
       .real-map-shell .leaflet-container {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Noto Sans Thai",
+          sans-serif;
         background: #f6f3ed;
       }
       .real-map-shell .leaflet-tile {
@@ -261,7 +270,7 @@ export class ParcelMap implements OnDestroy {
   drawLines = input(true);
   decorativeRider = input(false);
   pointChange = output<Point>();
-  canvas = viewChild.required<ElementRef<HTMLDivElement>>('canvas');
+  canvas = viewChild.required<ElementRef<HTMLDivElement>>("canvas");
   loading = signal(true);
   tileError = signal(false);
   expanded = signal(false);
@@ -274,7 +283,7 @@ export class ParcelMap implements OnDestroy {
   private destroyed = false;
   private tileCount = 0;
   locating = signal(false);
-  mapNotice = signal('');
+  mapNotice = signal("");
   private fitted = false;
   private geoWatch?: number;
   constructor() {
@@ -287,14 +296,15 @@ export class ParcelMap implements OnDestroy {
       this.render();
     });
     afterNextRender(async () => {
-      const leafletModule = await import('leaflet');
+      const leafletModule = await import("leaflet");
       // The production Angular bundle exposes the CommonJS Leaflet package
       // as a default export; normalize it to the Leaflet namespace API.
       const L =
-        (leafletModule as unknown as { default?: typeof Leaflet }).default ?? leafletModule;
+        (leafletModule as unknown as { default?: typeof Leaflet }).default ??
+        leafletModule;
       if (this.destroyed) return;
       this.L = L;
-      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
       this.map = L.map(this.canvas().nativeElement, {
         center: [this.center().latitude, this.center().longitude],
         zoom: 14,
@@ -304,33 +314,36 @@ export class ParcelMap implements OnDestroy {
         fadeAnimation: !reduced,
         markerZoomAnimation: !reduced,
       });
-      this.map.zoomControl.setPosition('topleft');
-      this.tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-        maxZoom: 19,
-        detectRetina: false,
-      }).addTo(this.map);
-      this.tiles.on('tileload', () => {
+      this.map.zoomControl.setPosition("topleft");
+      this.tiles = L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+          maxZoom: 19,
+          detectRetina: false,
+        },
+      ).addTo(this.map);
+      this.tiles.on("tileload", () => {
         this.tileCount++;
         this.loading.set(false);
         this.tileError.set(false);
       });
-      this.tiles.on('tileerror', () => {
+      this.tiles.on("tileerror", () => {
         this.loading.set(false);
         if (!this.tileCount) this.tileError.set(true);
       });
-      this.tiles.on('load', () => this.loading.set(false));
+      this.tiles.on("load", () => this.loading.set(false));
       this.layers = L.featureGroup().addTo(this.map);
-      this.map.on('click', (e: Leaflet.LeafletMouseEvent) => {
+      this.map.on("click", (e: Leaflet.LeafletMouseEvent) => {
         if (this.editable())
           this.pointChange.emit({
             latitude: Number(e.latlng.lat.toFixed(6)),
             longitude: Number(e.latlng.lng.toFixed(6)),
           });
       });
-      this.map.on('keydown', (e: Leaflet.LeafletKeyboardEvent) => {
-        if (e.originalEvent.key === 'Escape' && this.expanded()) this.toggle();
+      this.map.on("keydown", (e: Leaflet.LeafletKeyboardEvent) => {
+        if (e.originalEvent.key === "Escape" && this.expanded()) this.toggle();
       });
       this.resize = new ResizeObserver(() => {
         this.map?.invalidateSize({ animate: false });
@@ -348,7 +361,7 @@ export class ParcelMap implements OnDestroy {
     );
   }
   private pointList(value: unknown): Point[] {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       try {
         return this.pointList(JSON.parse(value));
       } catch {
@@ -359,9 +372,9 @@ export class ParcelMap implements OnDestroy {
     return value.filter(
       (point): point is Point =>
         !!point &&
-        typeof point === 'object' &&
-        typeof point.latitude === 'number' &&
-        typeof point.longitude === 'number' &&
+        typeof point === "object" &&
+        typeof point.latitude === "number" &&
+        typeof point.longitude === "number" &&
         this.valid(point as Point),
     );
   }
@@ -375,72 +388,102 @@ export class ParcelMap implements OnDestroy {
     // unexpected shape while old and new payloads coexist. Keep malformed
     // map data from crashing the Angular render effect.
     const routeInput: unknown = this.routes();
-    const routes = Array.isArray(routeInput) && routeInput.length
-      ? routeInput
-      : [{ path: this.pointList(this.points()), geometry: [], color: '#ff641c' }];
+    const routes =
+      Array.isArray(routeInput) && routeInput.length
+        ? routeInput
+        : [
+            {
+              path: this.pointList(this.points()),
+              geometry: [],
+              color: "#ff641c",
+            },
+          ];
     let depotAdded = false;
+    let deliverySequence = 0;
     for (const value of routes) {
-      const route = value && typeof value === 'object' ? value as Partial<RouteShape> : {};
+      const route =
+        value && typeof value === "object"
+          ? (value as Partial<RouteShape>)
+          : {};
       const path = this.pointList(route.path),
         road = this.pointList(route.geometry);
-      const color = typeof route.color === 'string' && /^#[0-9a-f]{6}$/i.test(route.color)
-        ? route.color
-        : '#ff641c';
+      const color =
+        typeof route.color === "string" && /^#[0-9a-f]{6}$/i.test(route.color)
+          ? route.color
+          : "#ff641c";
       if (this.drawLines() && (road.length > 1 || path.length > 1)) {
         const real = road.length > 1;
         L.polyline(
-          (real ? road : path).map((p) => [p.latitude, p.longitude] as Leaflet.LatLngTuple),
-          { color: '#fff', weight: 10, opacity: 0.96 },
+          (real ? road : path).map(
+            (p) => [p.latitude, p.longitude] as Leaflet.LatLngTuple,
+          ),
+          { color: "#fff", weight: 10, opacity: 0.96 },
         ).addTo(g);
         L.polyline(
-          (real ? road : path).map((p) => [p.latitude, p.longitude] as Leaflet.LatLngTuple),
-          { color, weight: 6, opacity: 1, ...(!real ? { dashArray: '8 10' } : {}) },
+          (real ? road : path).map(
+            (p) => [p.latitude, p.longitude] as Leaflet.LatLngTuple,
+          ),
+          {
+            color,
+            weight: 6,
+            opacity: 1,
+            ...(!real ? { dashArray: "8 10" } : {}),
+          },
         ).addTo(g);
       }
       for (let i = 0; i < path.length; i++) {
         if (i === 0 && depotAdded) continue;
         if (i === 0) depotAdded = true;
         const point = path[i];
+        const sequence = i === 0 ? 0 : ++deliverySequence;
         const marker = L.marker([point.latitude, point.longitude], {
           icon: L.divIcon({
-            className: 'delivery-marker',
-            html: `<span class="map-pin ${i === 0 && !this.editable() ? 'depot-pin' : ''}" style="--pin-color:${color}"><b>${this.editable() ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' : i === 0 ? 'ร้าน' : i}</b></span>`,
+            className: "delivery-marker",
+            html: `<span class="map-pin ${i === 0 && !this.editable() ? "depot-pin" : ""}" style="--pin-color:${color}"><b>${this.editable() ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' : i === 0 ? "ร้าน" : sequence}</b></span>`,
             iconSize: [36, 40],
             iconAnchor: [18, 36],
           }),
-          title: this.editable() ? 'พิกัดที่เลือก' : i === 0 ? 'ร้านผู้ส่ง' : `จุดส่ง ${i}`,
+          title: this.editable()
+            ? "พิกัดที่เลือก"
+            : i === 0
+              ? "ร้านผู้ส่ง"
+              : `จุดส่ง ${sequence}`,
           keyboard: true,
           draggable: this.editable(),
           autoPan: this.editable(),
           riseOnHover: true,
         });
-        const text = document.createElement('div');
+        const text = document.createElement("div");
         text.textContent = this.editable()
-          ? 'ตำแหน่งที่เลือก · ลากหมุดเพื่อปรับตำแหน่ง'
+          ? "ตำแหน่งที่เลือก · ลากหมุดเพื่อปรับตำแหน่ง"
           : i === 0
-            ? 'ร้านผู้ส่ง'
-            : 'จุดส่ง ' + i;
-        marker.on('dragend', () => this.emitPoint(marker.getLatLng()));
-        marker.on('add', () =>
-          marker.getElement()?.addEventListener('keydown', (originalEvent: KeyboardEvent) => {
-            const event = { originalEvent };
-            if (!this.editable() || !event.originalEvent.shiftKey) return;
-            const directions: Record<string, [number, number]> = {
-              ArrowUp: [0, -10],
-              ArrowDown: [0, 10],
-              ArrowLeft: [-10, 0],
-              ArrowRight: [10, 0],
-            };
-            const delta = directions[event.originalEvent.key];
-            if (!delta) return;
-            event.originalEvent.preventDefault();
-            event.originalEvent.stopPropagation();
-            const pixel = m.latLngToContainerPoint(marker.getLatLng());
-            this.emitPoint(m.containerPointToLatLng(pixel.add(delta)));
-            queueMicrotask(() =>
-              this.canvas().nativeElement.querySelector<HTMLElement>('.delivery-marker')?.focus(),
-            );
-          }),
+            ? "ร้านผู้ส่ง"
+            : "จุดส่ง " + sequence;
+        marker.on("dragend", () => this.emitPoint(marker.getLatLng()));
+        marker.on("add", () =>
+          marker
+            .getElement()
+            ?.addEventListener("keydown", (originalEvent: KeyboardEvent) => {
+              const event = { originalEvent };
+              if (!this.editable() || !event.originalEvent.shiftKey) return;
+              const directions: Record<string, [number, number]> = {
+                ArrowUp: [0, -10],
+                ArrowDown: [0, 10],
+                ArrowLeft: [-10, 0],
+                ArrowRight: [10, 0],
+              };
+              const delta = directions[event.originalEvent.key];
+              if (!delta) return;
+              event.originalEvent.preventDefault();
+              event.originalEvent.stopPropagation();
+              const pixel = m.latLngToContainerPoint(marker.getLatLng());
+              this.emitPoint(m.containerPointToLatLng(pixel.add(delta)));
+              queueMicrotask(() =>
+                this.canvas()
+                  .nativeElement.querySelector<HTMLElement>(".delivery-marker")
+                  ?.focus(),
+              );
+            }),
         );
         marker.bindPopup(text).addTo(g);
       }
@@ -461,7 +504,10 @@ export class ParcelMap implements OnDestroy {
         maxZoom: this.editable() ? 17 : 16,
         animate: false,
       });
-    else m.setView([this.center().latitude, this.center().longitude], 14, { animate: false });
+    else
+      m.setView([this.center().latitude, this.center().longitude], 14, {
+        animate: false,
+      });
   }
   private emitPoint(point: Leaflet.LatLng) {
     if (!this.editable()) return;
@@ -472,15 +518,16 @@ export class ParcelMap implements OnDestroy {
   }
   locate() {
     if (!this.editable() || this.locating()) return;
-    this.mapNotice.set('');
+    this.mapNotice.set("");
     if (!navigator.geolocation) {
-      this.mapNotice.set('อุปกรณ์นี้ไม่รองรับตำแหน่งปัจจุบัน');
+      this.mapNotice.set("อุปกรณ์นี้ไม่รองรับตำแหน่งปัจจุบัน");
       return;
     }
     this.locating.set(true);
     this.geoWatch = navigator.geolocation.watchPosition(
       (position) => {
-        if (this.geoWatch !== undefined) navigator.geolocation.clearWatch(this.geoWatch);
+        if (this.geoWatch !== undefined)
+          navigator.geolocation.clearWatch(this.geoWatch);
         this.geoWatch = undefined;
         if (this.destroyed) return;
         this.locating.set(false);
@@ -489,11 +536,14 @@ export class ParcelMap implements OnDestroy {
         this.map?.setView([latitude, longitude], 17);
       },
       () => {
-        if (this.geoWatch !== undefined) navigator.geolocation.clearWatch(this.geoWatch);
+        if (this.geoWatch !== undefined)
+          navigator.geolocation.clearWatch(this.geoWatch);
         this.geoWatch = undefined;
         if (this.destroyed) return;
         this.locating.set(false);
-        this.mapNotice.set('เปิดสิทธิ์ตำแหน่งในเบราว์เซอร์ หรือแตะบนแผนที่เพื่อปักหมุด');
+        this.mapNotice.set(
+          "เปิดสิทธิ์ตำแหน่งในเบราว์เซอร์ หรือแตะบนแผนที่เพื่อปักหมุด",
+        );
       },
       { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true },
     );
@@ -517,7 +567,8 @@ export class ParcelMap implements OnDestroy {
   ngOnDestroy() {
     this.destroyed = true;
     this.resize?.disconnect();
-    if (this.geoWatch !== undefined) navigator.geolocation.clearWatch(this.geoWatch);
+    if (this.geoWatch !== undefined)
+      navigator.geolocation.clearWatch(this.geoWatch);
     this.map?.remove();
   }
 }

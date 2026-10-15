@@ -13,6 +13,7 @@ import { Task } from '../shared/task';
 @Component({
   imports: [Icon, FormsModule, PageTitle, RequestState, DeliveryStatus, ParcelMap],
   templateUrl: './rider.html',
+  styleUrl: './rider.css',
 })
 export class RiderPage {
   api = inject(Api);
@@ -68,5 +69,15 @@ export class RiderPage {
         ).data,
       );
     }, 'อัปเดตใบงานแล้ว');
+  }
+  progress(job: Job) {
+    return job.totalOrders > 0
+      ? Math.min(100, Math.max(0, (job.deliveredStops / job.totalOrders) * 100))
+      : 0;
+  }
+  nextStep(job: Job) {
+    return job.remainingStops > 0
+      ? `ขั้นตอนถัดไป: จุดส่ง ${job.deliveredStops + 1}`
+      : 'ส่งครบทุกจุดแล้ว';
   }
 }

@@ -132,6 +132,8 @@ export const toJob = (source: Plan): Job => {
   return {
     geometry: deliveryRoute.geometry,
     jobCode: deliveryRoute.jobCode,
+    color: deliveryRoute.color,
+    colorName: deliveryRoute.colorName,
     planStatus: source.status,
     deliveryDate: source.deliveryDate,
     status: deliveryRoute.status,

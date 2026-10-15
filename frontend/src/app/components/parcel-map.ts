@@ -59,8 +59,7 @@ type RouteShape = Pick<DeliveryRoute, 'path' | 'geometry' | 'color'>;
         [title]="clearMap() ? 'ใช้สีแผนที่ปกติ' : 'ใช้ธีมแผนที่สว่างชัด'"
         (click)="clearMap.update((value) => !value)"
       >
-        <ui-icon name="eye" />
-      </button
+        <ui-icon name="eye" /></button
       ><button
         class="map-tool"
         type="button"
@@ -179,7 +178,12 @@ type RouteShape = Pick<DeliveryRoute, 'path' | 'geometry' | 'color'>;
         border-radius: 50%;
       }
       .real-map-shell .leaflet-container {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', sans-serif;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Noto Sans Thai',
+          sans-serif;
         background: #f6f3ed;
       }
       .real-map-shell .leaflet-tile {
@@ -290,8 +294,7 @@ export class ParcelMap implements OnDestroy {
       const leafletModule = await import('leaflet');
       // The production Angular bundle exposes the CommonJS Leaflet package
       // as a default export; normalize it to the Leaflet namespace API.
-      const L =
-        (leafletModule as unknown as { default?: typeof Leaflet }).default ?? leafletModule;
+      const L = (leafletModule as unknown as { default?: typeof Leaflet }).default ?? leafletModule;
       if (this.destroyed) return;
       this.L = L;
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -375,17 +378,20 @@ export class ParcelMap implements OnDestroy {
     // unexpected shape while old and new payloads coexist. Keep malformed
     // map data from crashing the Angular render effect.
     const routeInput: unknown = this.routes();
-    const routes = Array.isArray(routeInput) && routeInput.length
-      ? routeInput
-      : [{ path: this.pointList(this.points()), geometry: [], color: '#ff641c' }];
+    const routes =
+      Array.isArray(routeInput) && routeInput.length
+        ? routeInput
+        : [{ path: this.pointList(this.points()), geometry: [], color: '#ff641c' }];
     let depotAdded = false;
+    let deliverySequence = 0;
     for (const value of routes) {
-      const route = value && typeof value === 'object' ? value as Partial<RouteShape> : {};
+      const route = value && typeof value === 'object' ? (value as Partial<RouteShape>) : {};
       const path = this.pointList(route.path),
         road = this.pointList(route.geometry);
-      const color = typeof route.color === 'string' && /^#[0-9a-f]{6}$/i.test(route.color)
-        ? route.color
-        : '#ff641c';
+      const color =
+        typeof route.color === 'string' && /^#[0-9a-f]{6}$/i.test(route.color)
+          ? route.color
+          : '#ff641c';
       if (this.drawLines() && (road.length > 1 || path.length > 1)) {
         const real = road.length > 1;
         L.polyline(
@@ -401,14 +407,15 @@ export class ParcelMap implements OnDestroy {
         if (i === 0 && depotAdded) continue;
         if (i === 0) depotAdded = true;
         const point = path[i];
+        const sequence = i === 0 ? 0 : ++deliverySequence;
         const marker = L.marker([point.latitude, point.longitude], {
           icon: L.divIcon({
             className: 'delivery-marker',
-            html: `<span class="map-pin ${i === 0 && !this.editable() ? 'depot-pin' : ''}" style="--pin-color:${color}"><b>${this.editable() ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' : i === 0 ? 'ร้าน' : i}</b></span>`,
+            html: `<span class="map-pin ${i === 0 && !this.editable() ? 'depot-pin' : ''}" style="--pin-color:${color}"><b>${this.editable() ? '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>' : i === 0 ? 'ร้าน' : sequence}</b></span>`,
             iconSize: [36, 40],
             iconAnchor: [18, 36],
           }),
-          title: this.editable() ? 'พิกัดที่เลือก' : i === 0 ? 'ร้านผู้ส่ง' : `จุดส่ง ${i}`,
+          title: this.editable() ? 'พิกัดที่เลือก' : i === 0 ? 'ร้านผู้ส่ง' : `จุดส่ง ${sequence}`,
           keyboard: true,
           draggable: this.editable(),
           autoPan: this.editable(),
@@ -419,7 +426,7 @@ export class ParcelMap implements OnDestroy {
           ? 'ตำแหน่งที่เลือก · ลากหมุดเพื่อปรับตำแหน่ง'
           : i === 0
             ? 'ร้านผู้ส่ง'
-            : 'จุดส่ง ' + i;
+            : 'จุดส่ง ' + sequence;
         marker.on('dragend', () => this.emitPoint(marker.getLatLng()));
         marker.on('add', () =>
           marker.getElement()?.addEventListener('keydown', (originalEvent: KeyboardEvent) => {

@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { fixtures } from './fixtures';
+import { demoData } from './fixtures-data';
 async function noOverflow(page: Page) {
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
@@ -28,6 +29,61 @@ test('simulated records appear as normal orders without a test badge', async ({ 
   await page.goto('/admin/orders');
   await expect(page.locator('.table-scroll tbody tr').first()).toBeVisible();
   await expect(page.getByText('ข้อมูลทดสอบ', { exact: true })).toHaveCount(0);
+});
+test('rider job makes delivery progress and box counts easy to scan', async ({ page }) => {
+  await fixtures(page);
+  await page.route('https://tile.openstreetmap.org/**', (route) => route.abort());
+  await page.goto('/rider/jobs/JOB-TEST-001');
+  await expect(page.getByText('กล่องที่ต้องนำไปส่ง', { exact: true })).toBeVisible();
+  await expect(page.locator('.box-summary strong')).toHaveText('3');
+  await expect(page.getByRole('progressbar', { name: 'ความคืบหน้าการส่ง' })).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  );
+  await expect(page.getByText('ขั้นตอนถัดไป: จุดส่ง 1', { exact: true })).toBeVisible();
+  await expect(page.locator('.step-number')).toHaveText(['1', '2']);
+  await expect(page.locator('.box-count')).toHaveText(['1 กล่อง', '2 กล่อง']);
+  await expect(page.locator('parcel-map .map-pin').nth(1)).toHaveAttribute(
+    'style',
+    /--pin-color:#c24716/,
+  );
+});
+test('map numbers stops continuously across rider routes', async ({ page }) => {
+  await fixtures(page);
+  await page.route('https://tile.openstreetmap.org/**', (route) => route.abort());
+  const data = demoData();
+  const first = data.plan.routes[0];
+  const thirdPoint = { latitude: 16.249, longitude: 103.257 };
+  const multiRoutePlan = {
+    ...data.plan,
+    routes: [
+      first,
+      {
+        ...first,
+        id: 2,
+        sequence: 2,
+        jobCode: 'JOB-TEST-002',
+        color: '#2784d8',
+        rider: data.riders[1],
+        orderCount: 1,
+        boxCount: 1,
+        path: [data.plan.shop.location, thirdPoint],
+        geometry: [data.plan.shop.location, thirdPoint],
+        stops: [
+          {
+            ...first.stops[0],
+            id: 3,
+            sequence: 1,
+            customerName: 'ลูกค้าคนที่สาม',
+            location: thirdPoint,
+          },
+        ],
+      },
+    ],
+  };
+  await page.route('**/api/plans/1', (route) => route.fulfill({ json: { data: multiRoutePlan } }));
+  await page.goto('/admin/plans');
+  await expect(page.locator('parcel-map .map-pin b')).toHaveText(['ร้าน', '1', '2', '3']);
 });
 for (const width of [320, 390, 768, 1024, 1440, 1920])
   test(`simple screens and forms fit at ${width}px`, async ({ page }) => {

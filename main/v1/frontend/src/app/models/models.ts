@@ -104,6 +104,8 @@ export interface Proposal {
 export interface Job {
   geometry?: Point[];
   jobCode: string;
+  color: string;
+  colorName: string;
   planStatus: string;
   deliveryDate: string;
   status: string;
