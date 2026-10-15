@@ -52,3 +52,14 @@ npm start
 ## Deploy Frontend
 
 Frontend ใช้ Angular และตั้ง Vercel output directory ไว้ที่ `dist/frontend/browser` ใน `frontend/vercel.json` เส้นทาง `/api/*` จะ proxy ไป backend production
+
+## คู่มืออธิบายโค้ดและพรีเซนต์
+
+- [คู่มือ Frontend](FRONTEND-GUIDE.md) — โครงสร้าง Angular, ทุกหน้าและ shared components, การเรียก API, model, responsive styling, workflow และคำถามที่มักถูกถาม
+- [คู่มือ Backend](BACKEND-GUIDE.md) — request lifecycle, auth, modules และไฟล์ย่อย, database/migrations, API reference, validation, rules, routing และอัลกอริทึมจัดเส้นทาง
+- [คู่มือ Backend ฉบับสั้น](BACKEND-QUICK-GUIDE.md) — ไล่ request ตั้งแต่ server ถึงฐานข้อมูล พร้อมไฟล์ที่ควรเปิดตอนพรีเซนต์และส่วนที่ไม่ควรลบ
+- [หน้าที่ของไฟล์ทุกส่วน](FILE-BY-FILE.md) — รายการไฟล์ใน Frontend และ Backend พร้อมคำอธิบายสั้น ๆ ทีละไฟล์
+- [Postman collection และวิธีใช้](postman/README.md) — import JSON เพื่อทดสอบ API พร้อม environment และ token อัตโนมัติ
+- [แนวทางนำเสนอความก้าวหน้าเชิงเทคนิค](TECHNICAL-PRESENTATION.md) — โครงสไลด์ บทพูด demo checklist และคำถามที่อาจารย์อาจถาม ครอบคลุม Frontend, Backend และ Infrastructure
+
+แนะนำให้อ่านภาพรวม README นี้ก่อน แล้วเปิดคู่มือแต่ละฝั่งตามลำดับการไหลของ request คู่มือออกแบบจาก source code ใน `main/v1/` โดยตรง ชุดนี้แยก tests และรายงานออกเพื่อให้โค้ดหลักนำเสนอได้ง่าย; ชุดทดสอบอยู่ใน repository หลักตามตำแหน่งที่ระบุในคู่มือ

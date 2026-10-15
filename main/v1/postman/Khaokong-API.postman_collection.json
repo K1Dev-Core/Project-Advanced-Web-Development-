@@ -1,0 +1,1615 @@
+{
+  "info": {
+    "name": "Khaokong API — Complete Test Collection",
+    "description": "Postman collection for the Khaokong Node.js/Express API. Import the companion environment, set owner credentials, run Login first, then run create requests to populate customerId/orderId/riderId/planId/jobCode/stopId/trackingCode. Destructive cleanup requests are labeled; run them only against test data.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.environment.get(\"deliveryDate\")) {",
+          "  const bangkokDate = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);",
+          "  pm.environment.set(\"deliveryDate\", bangkokDate);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "API root with endpoint catalog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{serverRoot}}/api",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Root URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{serverRoot}}/",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health at root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{serverRoot}}/health",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health under /api",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login (saves accessToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{ownerUsername}}\",\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));",
+                  "const token = pm.response.json().data?.token; if (token) pm.environment.set(\"accessToken\", token); pm.test(\"Login returns a token\", () => pm.expect(token).to.be.a(\"string\").and.not.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current owner (requires login)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard by date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/dashboard?date={{deliveryDate}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get shop settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/settings",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update shop settings (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/settings",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxPrice\": 65,\n  \"boxCost\": 40\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update shop settings (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/settings",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderSpeedKmh\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/customers?page=1&limit=10",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Find customers nearby",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/customers/nearby?lat=16.246825&lng=103.252021&radius=1",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/customers/{{customerId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List orders for customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/customers/{{customerId}}/orders?page=1&limit=10",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create customer (saves customerId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customers",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Customer\",\n  \"phone\": \"{{testPhone}}\",\n  \"address\": \"มหาวิทยาลัยมหาสารคาม\",\n  \"location\": {\n    \"latitude\": 16.246825,\n    \"longitude\": 103.252021\n  },\n  \"note\": \"Postman API collection test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));",
+                  "const data = pm.response.json().data; if (data?.id != null) pm.environment.set(\"customerId\", String(data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace/update customer (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customers/{{customerId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Postman\",\n  \"lastName\": \"Customer PUT\",\n  \"phone\": \"{{testPhone}}\",\n  \"note\": \"Updated by PUT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partially update customer (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customers/{{customerId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Updated by PATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete customer by ID (test record only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/customers/{{customerId}}?force=false",
+            "description": "Deletes the customer created by this collection. Remove its orders first if you created any."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Riders",
+      "item": [
+        {
+          "name": "List riders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/riders?page=1&limit=10",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get rider by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/riders/{{riderId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create rider (saves riderId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/riders",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Rider\",\n  \"phone\": \"{{riderPhone}}\",\n  \"vehiclePlate\": \"1กข 1234 มหาสารคาม\",\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));",
+                  "const data = pm.response.json().data; if (data?.id != null) pm.environment.set(\"riderId\", String(data.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace/update rider (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/riders/{{riderId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Rider PUT\",\n  \"phone\": \"{{riderPhone}}\",\n  \"vehiclePlate\": \"1กข 1234 มหาสารคาม\",\n  \"active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partially update rider (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/riders/{{riderId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete rider by ID (test record only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/riders/{{riderId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orders?page=1&limit=10&deliveryDate={{deliveryDate}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Order summary by date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orders/summary?deliveryDate={{deliveryDate}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Find orders nearby",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orders/nearby?lat=16.246825&lng=103.252021&radius=2&deliveryDate={{deliveryDate}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/orders/{{orderId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create order (saves orderId and trackingCode)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"boxes\": 1,\n  \"deliveryDate\": \"{{deliveryDate}}\",\n  \"note\": \"Postman API collection test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));",
+                  "const data = pm.response.json().data; if (data?.id != null) pm.environment.set(\"orderId\", String(data.id)); if (data?.trackingCode) pm.environment.set(\"trackingCode\", data.trackingCode);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace/update order (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{orderId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxes\": 1,\n  \"note\": \"Updated by PUT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Partially update order (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{orderId}}",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Updated by PATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Set order box count",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{orderId}}/boxes",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"boxes\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change order box count by delta",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/orders/{{orderId}}/boxes",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"change\": -1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete one order (test record only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/orders/{{orderId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete simulated orders for date",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/orders?deliveryDate={{deliveryDate}}&simulated=true",
+            "description": "Deletes only simulated orders for the selected date; may also remove plans that reference those orders."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Plans",
+      "item": [
+        {
+          "name": "List plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/plans?page=1&limit=10&deliveryDate={{deliveryDate}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List optimization objectives",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/plans/objectives",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get latest plan by date",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/plans/latest?deliveryDate={{deliveryDate}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview a plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/plans/preview",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryDate\": \"{{deliveryDate}}\",\n  \"objective\": \"balanced\",\n  \"seed\": 42,\n  \"alternatives\": 3,\n  \"alternativeIndex\": 0,\n  \"orderIds\": [\"{{orderId}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create draft plan (saves planId, routeId, jobCode, stopId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/plans",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryDate\": \"{{deliveryDate}}\",\n  \"objective\": \"balanced\",\n  \"seed\": 42,\n  \"alternatives\": 3,\n  \"alternativeIndex\": 0,\n  \"orderIds\": [\"{{orderId}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));",
+                  "const data = pm.response.json().data; if (data?.id != null) pm.environment.set(\"planId\", String(data.id)); const route = data?.routes?.[0]; if (route?.id != null) pm.environment.set(\"routeId\", String(route.id)); if (route?.jobCode) pm.environment.set(\"jobCode\", route.jobCode); const stop = route?.stops?.[0]; if (stop?.id != null) pm.environment.set(\"stopId\", String(stop.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get plan by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/plans/{{planId}}",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Recalculate draft plan (refreshes route/job/stop variables)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/plans/{{planId}}/recalculate",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"objective\": \"balanced\",\n  \"seed\": 43,\n  \"includeNewOrders\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));",
+                  "const data = pm.response.json().data?.plan; if (data?.id != null) pm.environment.set(\"planId\", String(data.id)); const route = data?.routes?.[0]; if (route?.id != null) pm.environment.set(\"routeId\", String(route.id)); if (route?.jobCode) pm.environment.set(\"jobCode\", route.jobCode); const stop = route?.stops?.[0]; if (stop?.id != null) pm.environment.set(\"stopId\", String(stop.id));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign rider to route",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/plans/{{planId}}/routes/{{routeId}}/rider",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderId\": \"{{riderId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirm draft plan",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/plans/{{planId}}/confirm",
+            "description": "Confirms and locks the plan orders. Run only after preview/review and rider assignment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel plan",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/plans/{{planId}}/cancel",
+            "description": "Cancels a confirmed plan and releases its orders."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete plan (draft/cancelled only)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/plans/{{planId}}",
+            "description": "Only removes a non-active plan. A confirmed plan must be cancelled first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Get rider job sheet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/jobs/{{jobCode}}",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Start rider route",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/jobs/{{jobCode}}/start",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark stop delivered",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/jobs/{{jobCode}}/stops/{{stopId}}/deliver",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Undo delivered stop",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/jobs/{{jobCode}}/stops/{{stopId}}/undo",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tracking",
+      "item": [
+        {
+          "name": "Track order with tracking code",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/tracking/{{trackingCode}}",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Simulations",
+      "item": [
+        {
+          "name": "Generate simulated customers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/simulations/customers",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 5,\n  \"minRadiusKm\": 0.2,\n  \"seed\": 12345\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate simulated orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/simulations/orders",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 5,\n  \"deliveryDate\": \"{{deliveryDate}}\",\n  \"clearExisting\": false,\n  \"ensureCustomers\": true,\n  \"uniqueCustomers\": true,\n  \"seed\": 12346\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate simulated riders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/simulations/riders",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"count\": 2,\n  \"seed\": 12347\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete simulated orders by date",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/simulations/orders?deliveryDate={{deliveryDate}}",
+            "description": "Deletes only simulated orders for this date."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete unused simulated customers",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/simulations/customers",
+            "description": "Deletes simulated customers that are not referenced by orders."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reset simulated data",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/simulations?includeRiders=false",
+            "description": "Destructive cleanup of simulated data only. Set includeRiders=true only if you also want to remove simulated riders."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP request succeeded\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+                  "pm.test(\"Response is JSON\", () => pm.expect(pm.response.headers.get(\"Content-Type\") || \"\").to.include(\"application/json\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
