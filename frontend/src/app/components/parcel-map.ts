@@ -287,7 +287,11 @@ export class ParcelMap implements OnDestroy {
       this.render();
     });
     afterNextRender(async () => {
-      const L = await import('leaflet');
+      const leafletModule = await import('leaflet');
+      // The production Angular bundle exposes the CommonJS Leaflet package
+      // as a default export; normalize it to the Leaflet namespace API.
+      const L =
+        (leafletModule as unknown as { default?: typeof Leaflet }).default ?? leafletModule;
       if (this.destroyed) return;
       this.L = L;
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -343,20 +347,45 @@ export class ParcelMap implements OnDestroy {
       Math.abs(p.longitude) <= 180
     );
   }
+  private pointList(value: unknown): Point[] {
+    if (typeof value === 'string') {
+      try {
+        return this.pointList(JSON.parse(value));
+      } catch {
+        return [];
+      }
+    }
+    if (!Array.isArray(value)) return [];
+    return value.filter(
+      (point): point is Point =>
+        !!point &&
+        typeof point === 'object' &&
+        typeof point.latitude === 'number' &&
+        typeof point.longitude === 'number' &&
+        this.valid(point as Point),
+    );
+  }
   render() {
     const L = this.L,
       m = this.map,
       g = this.layers;
     if (!L || !m || !g) return;
     g.clearLayers();
-    const routes = this.routes().length
-      ? this.routes()
-      : [{ path: this.points(), geometry: [], color: '#ff641c' }];
+    // API deployments can temporarily return null, encoded JSON, or an
+    // unexpected shape while old and new payloads coexist. Keep malformed
+    // map data from crashing the Angular render effect.
+    const routeInput: unknown = this.routes();
+    const routes = Array.isArray(routeInput) && routeInput.length
+      ? routeInput
+      : [{ path: this.pointList(this.points()), geometry: [], color: '#ff641c' }];
     let depotAdded = false;
-    for (const r of routes) {
-      const path = r.path.filter((p) => this.valid(p)),
-        road = (r.geometry || []).filter((p) => this.valid(p));
-      const color = /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#ff641c';
+    for (const value of routes) {
+      const route = value && typeof value === 'object' ? value as Partial<RouteShape> : {};
+      const path = this.pointList(route.path),
+        road = this.pointList(route.geometry);
+      const color = typeof route.color === 'string' && /^#[0-9a-f]{6}$/i.test(route.color)
+        ? route.color
+        : '#ff641c';
       if (this.drawLines() && (road.length > 1 || path.length > 1)) {
         const real = road.length > 1;
         L.polyline(
