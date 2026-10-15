@@ -1254,3 +1254,64 @@ dialog {
     border-radius: 5px !important;
   }
 }
+
+/* Low-contrast halftone texture stays at the edges so content remains calm. */
+:root {
+  --page-background: #f2f2f7;
+  --halftone-dot: rgb(60 60 67 / 9%);
+  --halftone-dot-soft: rgb(60 60 67 / 5%);
+  color-scheme: light;
+  background-color: var(--page-background);
+}
+html {
+  background-color: var(--page-background);
+}
+body {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background: transparent;
+}
+body::before,
+body::after {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, var(--halftone-dot) 0.85px, transparent 1.2px),
+    radial-gradient(circle, var(--halftone-dot-soft) 1.25px, transparent 1.65px);
+  background-size: 13px 13px, 21px 21px;
+}
+body::before {
+  background-position: 0 0, 7px 5px;
+  -webkit-mask-image: radial-gradient(ellipse 44% 43% at 0% 0%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(ellipse 44% 43% at 0% 0%, #000 0%, transparent 100%);
+}
+body::after {
+  background-position: 4px 8px, 12px 2px;
+  -webkit-mask-image: radial-gradient(ellipse 38% 44% at 100% 100%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(ellipse 38% 44% at 100% 100%, #000 0%, transparent 100%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-background: #19191e;
+    --halftone-dot: rgb(255 255 255 / 10%);
+    --halftone-dot-soft: rgb(255 255 255 / 5%);
+    background-color: var(--page-background);
+    color-scheme: dark;
+  }
+  body {
+    color: #f5f5f7;
+  }
+  .page-title p,
+  footer {
+    color: #aeaeb5;
+  }
+  .panel,
+  dialog,
+  .plan-financials > div {
+    color: #1c1c1e;
+  }
+}
