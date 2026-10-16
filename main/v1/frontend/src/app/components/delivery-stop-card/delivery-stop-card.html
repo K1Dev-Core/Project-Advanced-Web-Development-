@@ -12,9 +12,6 @@
     <span class="planned-time">ถึงตามแผน {{ stop().eta }}</span>
   </div>
   <div class="actions">
-    <a class="button" [href]="stop().mapUrl" target="_blank" rel="noopener"
-      ><ui-icon name="pin" />นำทาง</a
-    >
     @if (stop().phone) {
       <a class="button" [href]="'tel:' + stop().phone"><ui-icon name="phone" />โทรหาผู้รับ</a>
     }
