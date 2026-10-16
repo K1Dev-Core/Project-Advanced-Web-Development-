@@ -1,6 +1,5 @@
 import { HttpError } from "../../core/errors/HttpError";
 import { TransactionRunner } from "../../database/TransactionRunner";
-import { MapLinkBuilder } from "../../shared/geo/MapLinkBuilder";
 import { OrderRepository } from "../orders/OrderRepository";
 import { DeliveryPlan, PlanRoute } from "../plans/DeliveryPlan";
 import { PlanRepository } from "../plans/PlanRepository";
@@ -128,7 +127,6 @@ export class JobService {
       shop: {
         name: plan.shop.name,
         location: plan.shop.location,
-        mapUrl: MapLinkBuilder.place(plan.shop.location),
       },
       departureTime: plan.departureTime,
       deadlineTime: plan.deadlineTime,
@@ -141,7 +139,6 @@ export class JobService {
       deliveredStops: delivered,
       remainingStops: route.stops.length - delivered,
       instructions,
-      navigationUrl: route.navigationUrl,
       path: route.path,
       geometry: route.geometry,
       stops: route.stops.map((stop) => ({
@@ -160,7 +157,6 @@ export class JobService {
         late: stop.late,
         status: stop.status,
         deliveredAt: stop.deliveredAt,
-        mapUrl: stop.mapUrl,
       })),
       startedAt: route.startedAt,
       completedAt: route.completedAt,

@@ -8,8 +8,7 @@ import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Api } from '../../services/api';
-import { Customer, Order, Rider, Settings, Point, today } from '../../models/models';
-import { ParcelMap } from '../../components/map/parcel-map';
+import { Customer, Order, Rider, Settings, today } from '../../models/models';
 import { PageTitle } from '../../components/ui/page-title';
 import { RequestState } from '../../components/ui/request-state';
 import { Field, FormFields, Values } from '../../shared/fields';
@@ -26,7 +25,6 @@ type Row = Customer | Order | Rider;
     PageTitle,
     RequestState,
     FormFields,
-    ParcelMap,
   ],
   templateUrl: './records.html',
 })
@@ -193,16 +191,6 @@ export class RecordsPage {
       };
     }
     this.editor()?.nativeElement.showModal();
-  }
-  point(): Point {
-    return {
-      latitude: Number(this.values['latitude']),
-      longitude: Number(this.values['longitude']),
-    };
-  }
-  pick(point: Point) {
-    this.values['latitude'] = point.latitude;
-    this.values['longitude'] = point.longitude;
   }
   guardClose(event: Event) {
     if (this.saveTask.busy()) event.preventDefault();

@@ -50,19 +50,11 @@
         <small>{{ nextStep(j) }}</small>
       </div>
     </div>
-    <div class="map-frame">
-      <parcel-map
-        [routes]="[{ path: j.path, geometry: j.geometry || [], color: j.color || '#e9672c' }]"
-      />
-    </div>
     <p class="hint">
       ออกจาก {{ j.shop.name }} เวลา {{ j.departureTime }} · ส่งครบก่อน {{ j.deadlineTime }} ·
       เวลาตามแผน
     </p>
     <div class="actions">
-      <a class="button" [href]="j.navigationUrl" target="_blank" rel="noopener"
-        ><ui-icon name="pin" />เปิดแผนที่นำทาง</a
-      >
       @if (j.status === 'pending') {
         <button class="primary" (click)="action('start')" [disabled]="task.busy()">
           <ui-icon name="truck" />เริ่มออกส่ง

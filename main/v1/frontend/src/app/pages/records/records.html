@@ -79,11 +79,6 @@
     </div>
     <fieldset [disabled]="saveTask.busy()">
       <form-fields [disabled]="saveTask.busy()" [fields]="fields" [values]="values" />
-      @if (kind === 'customers') {
-        <div class="map-frame">
-          <parcel-map [points]="[point()]" [editable]="true" (pointChange)="pick($event)" />
-        </div>
-      }
     </fieldset>
     <request-state [busy]="saveTask.busy()" [error]="saveTask.error()" />
     <div class="dialog-actions">

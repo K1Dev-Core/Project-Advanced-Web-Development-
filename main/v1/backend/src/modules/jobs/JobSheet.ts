@@ -17,7 +17,6 @@ export interface JobSheetStop {
   late: boolean;
   status: StopStatus;
   deliveredAt: string | null;
-  mapUrl: string;
 }
 
 export interface JobSheet {
@@ -30,7 +29,7 @@ export interface JobSheet {
   colorName: string;
   rider: RouteRider | null;
   status: RouteStatus;
-  shop: { name: string; location: GeoPoint; mapUrl: string };
+  shop: { name: string; location: GeoPoint };
   departureTime: string;
   deadlineTime: string;
   finishTime: string;
@@ -42,7 +41,6 @@ export interface JobSheet {
   deliveredStops: number;
   remainingStops: number;
   instructions: string[];
-  navigationUrl: string;
   path: GeoPoint[];
   geometry: GeoPoint[];
   stops: JobSheetStop[];

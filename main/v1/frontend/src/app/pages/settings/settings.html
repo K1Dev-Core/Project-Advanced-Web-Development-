@@ -9,9 +9,6 @@
       <section class="panel">
         <h2>ข้อมูลร้าน</h2>
         <form-fields [disabled]="task.busy()" [fields]="shopFields" [values]="values" />
-        <div class="map-frame">
-          <parcel-map [editable]="true" [points]="[point()]" (pointChange)="pick($event)" />
-        </div>
       </section>
       <section class="panel">
         <h2>รอบส่งและราคา</h2>

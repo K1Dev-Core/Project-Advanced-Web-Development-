@@ -2,14 +2,13 @@ import { Icon } from '../../components/ui/icon';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Api } from '../../services/api';
-import { Settings, Point } from '../../models/models';
-import { ParcelMap } from '../../components/map/parcel-map';
+import { Settings } from '../../models/models';
 import { Field, FormFields, Values } from '../../shared/fields';
 import { PageTitle } from '../../components/ui/page-title';
 import { RequestState } from '../../components/ui/request-state';
 import { Task } from '../../shared/task';
 @Component({
-  imports: [Icon, FormsModule, FormFields, PageTitle, RequestState, ParcelMap],
+  imports: [Icon, FormsModule, FormFields, PageTitle, RequestState],
   templateUrl: './settings.html',
 })
 export class SettingsPage {
@@ -51,16 +50,6 @@ export class SettingsPage {
       Object.assign(this.values, shopLocation);
       this.loaded = true;
     });
-  }
-  point(): Point {
-    return {
-      latitude: Number(this.values['latitude']),
-      longitude: Number(this.values['longitude']),
-    };
-  }
-  pick(point: Point) {
-    this.values['latitude'] = point.latitude;
-    this.values['longitude'] = point.longitude;
   }
   save() {
     return this.task.run(async () => {

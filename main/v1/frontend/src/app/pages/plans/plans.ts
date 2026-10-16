@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Api } from '../../services/api';
 import { Plan, Proposal, Rider, today } from '../../models/models';
-import { ParcelMap } from '../../components/map/parcel-map';
 import { PageTitle } from '../../components/ui/page-title';
 import { RequestState } from '../../components/ui/request-state';
 import { DeliveryStatus } from '../../components/ui/delivery-status';
@@ -24,7 +23,6 @@ import { allRecords } from '../../shared/data';
     PageTitle,
     RequestState,
     DeliveryStatus,
-    ParcelMap,
     RouteCard,
   ],
   templateUrl: './plans.html',

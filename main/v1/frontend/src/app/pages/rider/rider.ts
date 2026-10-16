@@ -6,7 +6,6 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Api } from "../../services/api";
 import { Job } from "../../models/models";
-import { ParcelMap } from "../../components/map/parcel-map";
 import { PageTitle } from "../../components/ui/page-title";
 import { RequestState } from "../../components/ui/request-state";
 import { DeliveryStatus } from "../../components/ui/delivery-status";
@@ -18,7 +17,6 @@ import { Task } from "../../shared/task";
     PageTitle,
     RequestState,
     DeliveryStatus,
-    ParcelMap,
     DeliveryStopCard,
   ],
   templateUrl: "./rider.html",

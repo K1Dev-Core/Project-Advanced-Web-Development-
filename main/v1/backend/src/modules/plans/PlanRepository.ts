@@ -1,7 +1,6 @@
 import { Page, Pagination } from "../../core/http/Pagination";
 import { SqlExecutor } from "../../database/SqlExecutor";
 import { GeoPoint } from "../../shared/geo/GeoPoint";
-import { MapLinkBuilder } from "../../shared/geo/MapLinkBuilder";
 import { TimeOfDay } from "../../shared/time/TimeOfDay";
 import { RowParser } from "../../shared/utils/RowParser";
 import { OrderFilter } from "../orders/Order";
@@ -431,10 +430,6 @@ export class PlanRepository {
       stops,
       path,
       geometry: RowParser.json<GeoPoint[]>(row.geometry, path),
-      navigationUrl: MapLinkBuilder.route(
-        params.depot,
-        stops.map((stop) => stop.location),
-      ),
       startedAt: RowParser.date(row.started_at),
       completedAt: RowParser.date(row.completed_at),
     };
@@ -457,7 +452,6 @@ export class PlanRepository {
       arrivalMinutes: Number(row.arrival_minutes),
       eta: row.eta,
       late: RowParser.bool(row.late),
-      mapUrl: MapLinkBuilder.navigate(location),
       status: row.status,
       deliveredAt: RowParser.date(row.delivered_at),
     };

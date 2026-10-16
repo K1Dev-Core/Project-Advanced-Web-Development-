@@ -45,7 +45,6 @@ export interface Stop {
   eta: string;
   status: string;
   late: boolean;
-  mapUrl: string;
   callUrl?: string;
 }
 export interface DeliveryRoute {
@@ -64,7 +63,6 @@ export interface DeliveryRoute {
   riderFee: number;
   profit: number;
   lateStops: number;
-  navigationUrl: string;
   geometry: Point[];
   path: Point[];
   stops: Stop[];
@@ -121,7 +119,6 @@ export interface Job {
   riderFee: number;
   deliveredStops: number;
   remainingStops: number;
-  navigationUrl: string;
   path: Point[];
   stops: Stop[];
 }

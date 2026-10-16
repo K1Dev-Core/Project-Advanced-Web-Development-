@@ -100,7 +100,6 @@
       <div><small>ส่งครบตามแผน</small><strong [class.late-text]="!p.summary.onTime">{{ p.summary.latestArrivalTime }} น. · {{ p.summary.onTime ? 'ทันเวลา' : 'เกินเวลา ' + p.summary.lateStops + ' จุด' }}</strong></div>
     </div>
     <p class="hint">{{ p.summary.distanceSource === 'road' ? 'คำนวณจากระยะทางถนนจริง' : 'คำนวณจากระยะทางโดยประมาณ — ตรวจสอบการเชื่อมต่อแผนที่ก่อนยืนยัน' }}</p>
-    <div class="map-frame"><parcel-map [routes]="p.routes" /></div>
     <div class="actions">
       @if (p.status === 'draft') {
         <button

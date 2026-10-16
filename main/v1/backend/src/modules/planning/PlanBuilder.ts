@@ -1,5 +1,4 @@
 import { GeoMath } from "../../shared/geo/GeoPoint";
-import { MapLinkBuilder } from "../../shared/geo/MapLinkBuilder";
 import { TimeOfDay } from "../../shared/time/TimeOfDay";
 import { Money } from "../../shared/utils/Money";
 import {
@@ -101,7 +100,6 @@ export class PlanBuilder {
         arrivalMinutes: GeoMath.round(arrival, 1),
         eta: departure.addMinutes(Math.ceil(arrival)).toString(),
         late: arrival > this.params.deliveryWindowMinutes + 1e-9,
-        mapUrl: MapLinkBuilder.navigate(request.location),
       };
     });
 
@@ -127,7 +125,6 @@ export class PlanBuilder {
       stops,
       path: [this.params.depot, ...locations],
       geometry: [this.params.depot, ...locations],
-      navigationUrl: MapLinkBuilder.route(this.params.depot, locations),
     };
   }
 

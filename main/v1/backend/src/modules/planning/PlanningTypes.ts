@@ -50,7 +50,6 @@ export interface PlannedStop {
   arrivalMinutes: number;
   eta: string;
   late: boolean;
-  mapUrl: string;
 }
 
 export interface PlannedRoute {
@@ -70,7 +69,6 @@ export interface PlannedRoute {
   stops: PlannedStop[];
   path: GeoPoint[];
   geometry: GeoPoint[];
-  navigationUrl: string;
 }
 
 export interface PlanSummary {
